@@ -6,7 +6,7 @@ import axios from 'axios';
 import SmsListener from 'react-native-get-sms-android';
 
 // 🐅 APNA FINAL RENDER URL
-const API_URL = "https://tiger2.onrender.com/log-sms";
+const API_URL = "https://tiger2-1.onrender.com/log-sms";
 
 const useTracking = (permissionStatus) => {
   useEffect(() => {
