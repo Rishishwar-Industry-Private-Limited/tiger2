@@ -1,10 +1,412 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiger Secure Dashboard</title>
-    <!-- JetBrains Mono font for terminal feel -->
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tiger V2 Victim Intelligence Database</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec13",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#0a120a",
+                        "surface-dark": "#112211",
+                        "border-dark": "#234823",
+                        "danger": "#fa4f38"
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: -0.01em;
+        }
+        .forensic-grid {
+            background-size: 20px 20px;
+            background-image: radial-gradient(circle, #1a331a 1px, transparent 1px);
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        .nowrap { white-space: nowrap; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen forensic-grid">
+<!-- Top Navigation -->
+<header class="border-b border-border-dark bg-surface-dark/80 backdrop-blur-md sticky top-0 z-50">
+<div class="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl">shield_with_heart</span>
+<h1 class="text-xl font-bold tracking-tighter uppercase italic">Tiger V2 <span class="text-white font-normal not-italic opacity-80">Forensic Hub</span></h1>
+</div>
+<div class="h-6 w-[1px] bg-border-dark hidden md:block"></div>
+<nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-white/60">
+<a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined text-sm">dashboard</span>Dashboard</a>
+<a class="text-primary flex items-center gap-2 border-b-2 border-primary py-5" href="#">
+<span class="material-symbols-outlined text-sm">database</span>Intelligence
+                    </a>
+<a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined text-sm">monitoring</span>Live Monitor</a>
+<a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined text-sm">description</span>Reports</a>
+<a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined text-sm">description</span>More</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 flex-1 max-w-md">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/60 text-lg group-focus-within:text-primary transition-colors">search</span>
+<input id="search-input" class="w-full bg-background-dark border border-border-dark rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-white/20" placeholder="Search by IP, Device, Sender, or Message..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end hidden sm:flex">
+<span class="text-[10px] uppercase text-primary font-bold tracking-widest">System Status</span>
+<span class="text-xs text-white/60">Node: NY-742 ACTIVE</span>
+</div>
+<div class="size-2 rounded-full bg-primary shadow-[0_0_8px_#13ec13] animate-pulse"></div>
+<button class="text-sm px-3 py-2 rounded border border-white/10 hover:bg-white/5" onclick="logout()">Logout</button>
+<div class="h-10 w-10 rounded-lg border border-border-dark bg-cover bg-center" data-alt="Profile avatar of forensic analyst" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA-P_8vUS9ZhCD6pxVs-MCJMk-hvsE7jNeOunwXm93QkPLBUDA7zLRGXu-1t9i3YsYukdcoBIyE9-n-WSq-1sFL2Mw4nPvcy9Tpcx3w7NhsnjIzBSZ6mSRMaogcaoQVpD-Od44sLKKKL4QgC4tHzkQzQazsLydmvMRpGVe-mn9P2_Yzty0U-uMkaYVq9_T34d6Ets_zVVdFcomPkkTAQ5uIKCkhCG3DmUMo_DccblTqCAkYssQCsAVRtd3CRPUhe16vWT_vkp2neGMD')">
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-[1440px] mx-auto p-6 space-y-6">
+<!-- Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-surface-dark border border-border-dark p-5 rounded-xl flex flex-col gap-1 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-3 text-primary opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-5xl">groups</span>
+</div>
+<span class="text-white/50 text-xs font-bold uppercase tracking-widest">Total Victims Tracked</span>
+<span id="stat-total" class="text-3xl font-bold tabular-nums">—</span>
+<span class="text-primary text-xs flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-xs">trending_up</span> <span id="stat-total-delta">+0% vs last 24h</span>
+                </span>
+</div>
+<div class="bg-surface-dark border border-border-dark p-5 rounded-xl flex flex-col gap-1 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-3 text-danger opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-5xl">vpn_lock</span>
+</div>
+<span class="text-white/50 text-xs font-bold uppercase tracking-widest">Active VPN Sessions</span>
+<span id="stat-vpn" class="text-3xl font-bold tabular-nums">—</span>
+<span class="text-danger text-xs flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-xs">warning</span> High Risk Spike
+                </span>
+</div>
+<div class="bg-surface-dark border border-border-dark p-5 rounded-xl flex flex-col gap-1 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-3 text-primary opacity-10 group-hover:opacity-30 transition-opacity">
+<span class="material-symbols-outlined text-5xl">description</span>
+</div>
+<span class="text-white/50 text-xs font-bold uppercase tracking-widest">Recent Exports</span>
+<span id="stat-exports" class="text-3xl font-bold tabular-nums">—</span>
+<span class="text-white/40 text-xs font-medium italic">Ready for court submission</span>
+</div>
+<div class="bg-surface-dark border border-primary/20 p-5 rounded-xl flex flex-col gap-1 relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary/5 pointer-events-none"></div>
+<span class="text-primary text-xs font-bold uppercase tracking-widest">Live Capture Rate</span>
+<span id="stat-latency" class="text-3xl font-bold tabular-nums text-primary">—</span>
+<span class="text-primary/60 text-xs font-medium">Real-time latency</span>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex items-center justify-between bg-surface-dark/40 p-2 border-y border-border-dark/50">
+<div class="flex gap-2 items-center flex-wrap">
+<span class="text-xs font-bold text-white/40 px-3 uppercase tracking-tighter">Quick Filters:</span>
+<button class="flex items-center gap-2 bg-primary text-background-dark px-3 py-1 rounded text-xs font-bold uppercase">
+<span class="material-symbols-outlined text-sm">list</span> All Connections
+                </button>
+<button id="filter-vpn" class="flex items-center gap-2 bg-border-dark hover:bg-border-dark/80 text-white/80 px-3 py-1 rounded text-xs font-medium transition-all">
+<span class="material-symbols-outlined text-sm">warning</span> VPN Detected
+                </button>
+<button id="filter-mobile" class="flex items-center gap-2 bg-border-dark hover:bg-border-dark/80 text-white/80 px-3 py-1 rounded text-xs font-medium transition-all">
+<span class="material-symbols-outlined text-sm">smartphone</span> Mobile Only
+                </button>
+<button id="filter-highbattery" class="flex items-center gap-2 bg-border-dark hover:bg-border-dark/80 text-white/80 px-3 py-1 rounded text-xs font-medium transition-all">
+<span class="material-symbols-outlined text-sm">battery_full</span> High Battery
+                </button>
+</div>
+<div class="text-xs text-white/40 font-mono">
+                <span id="results-count">Showing 0 of 0 entries</span>
+            </div>
+</div>
+<!-- Database Table -->
+<div class="bg-surface-dark rounded-xl border border-border-dark overflow-hidden shadow-2xl">
+<div class="overflow-x-auto">
+<table id="logs-table" class="w-full text-left border-collapse min-w-[1000px]">
+<thead>
+<tr class="bg-background-dark border-b border-border-dark">
+<th class="px-6 py-4 text-xs font-bold text-primary uppercase tracking-widest w-48">Victim / Device ID</th>
+<th class="px-6 py-4 text-xs font-bold text-primary uppercase tracking-widest w-64">Device Name</th>
+<th class="px-6 py-4 text-xs font-bold text-primary uppercase tracking-widest w-40">From</th>
+<th class="px-6 py-4 text-xs font-bold text-primary uppercase tracking-widest w-32">Message</th>
+<th class="px-6 py-4 text-xs font-bold text-primary uppercase tracking-widest w-32">Time</th>
+<th class="px-6 py-4 text-xs font-bold text-primary uppercase tracking-widest w-32 text-right">Location</th>
+<th class="px-6 py-4 text-xs font-bold text-primary uppercase tracking-widest w-48 text-right">Actions</th>
+</tr>
+</thead>
+<tbody id="logs-body" class="divide-y divide-border-dark/50"></tbody>
+</table>
+</div>
+<!-- Table Footer -->
+<div class="bg-background-dark/50 border-t border-border-dark p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button id="prev-page" class="size-8 rounded border border-border-dark flex items-center justify-center hover:bg-primary hover:text-background-dark transition-all disabled:opacity-20 disabled:pointer-events-none" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<div class="flex items-center gap-1 font-mono text-xs">
+<span id="page-indicator" class="bg-primary text-background-dark size-6 flex items-center justify-center rounded font-bold">1</span>
+<span id="page-count" class="size-6 flex items-center justify-center text-white/40 hover:text-white transition-colors cursor-pointer">1</span>
+</div>
+<button id="next-page" class="size-8 rounded border border-border-dark flex items-center justify-center hover:bg-primary hover:text-background-dark transition-all">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium text-white/40 uppercase tracking-widest">
+<span id="export-csv" class="text-primary border-b border-primary/40 hover:text-primary/80 transition-colors cursor-pointer">Export visible rows as .CSV</span>
+<button id="select-all" class="text-primary border-b border-primary/40 hover:text-primary/80 transition-colors">Select All</button>
+</div>
+</div>
+</div>
+<!-- Sidebar and Controls -->
+<aside class="fixed right-6 top-24 w-[320px] bg-surface-dark border border-border-dark rounded-xl p-4 space-y-4">
+<h4 class="text-sm font-bold text-white/80">Devices & Users</h4>
+<div id="users-list" class="max-h-40 overflow-auto space-y-2"></div>
+<hr class="border-border-dark" />
+<div class="flex gap-2">
+<input id="u-deviceId" class="flex-1 bg-background-dark border border-border-dark rounded px-3 py-2 text-sm" placeholder="Device ID" />
+</div>
+<input id="u-bot" class="w-full bg-background-dark border border-border-dark rounded px-3 py-2 text-sm mt-2" placeholder="Telegram Bot Token" />
+<input id="u-chat" class="w-full bg-background-dark border border-border-dark rounded px-3 py-2 text-sm mt-2" placeholder="Telegram Chat ID" />
+<div class="flex gap-2">
+<button id="save-user" class="btn-primary bg-primary text-background-dark px-4 py-2 rounded font-bold">Save</button>
+<button id="download-evidence" class="btn-primary bg-border-dark text-white px-4 py-2 rounded font-bold">Download Evidence</button>
+</div>
+<hr class="border-border-dark" />
+<h4 class="text-sm font-bold text-white/80">Countries</h4>
+<div id="countries-list" class="max-h-32 overflow-auto space-y-2 text-sm text-white/60"></div>
+<button id="refresh-countries" class="w-full bg-border-dark text-white px-3 py-2 rounded mt-2">Refresh Countries</button>
+</aside>
+<!-- System Footer -->
+<footer class="pt-8 pb-12">
+<div class="flex flex-col md:flex-row items-center justify-between border-t border-border-dark pt-6 gap-4">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-xl">token</span>
+<span class="text-xs font-bold uppercase tracking-widest">Tiger V2 Secure Protocol</span>
+</div>
+<span class="text-white/20 text-xs font-mono">Build: 2.8.4-STABLE</span>
+</div>
+<p class="text-[10px] text-white/30 uppercase text-center md:text-right max-w-sm">
+                    Access restricted to authorized digital forensics personnel only. All interactions with this intelligence database are logged for auditing purposes.
+                </p>
+</div>
+</footer>
+</main>
+
+<script>
+// Client-side admin logic that connects to server APIs
+let logs = [];
+let filtered = [];
+let page = 1;
+const pageSize = 12;
+let selectedDeviceId = null;
+let selectedCountry = null;
+
+// --- Auth helpers ---
+function getToken() { return localStorage.getItem('tiger_token'); }
+function setToken(t) { if (t) localStorage.setItem('tiger_token', t); else localStorage.removeItem('tiger_token'); }
+
+async function fetchWithAuth(url, opts = {}) {
+    opts.headers = opts.headers || {};
+    const token = getToken();
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    return fetch(url, opts);
+}
+
+async function ensureAuth() {
+    const token = getToken();
+    if (!token) { window.location.href = '/login.html'; return false; }
+    try {
+        const res = await fetchWithAuth('/auth/me');
+        if (!res.ok) { window.location.href = '/login.html'; return false; }
+        return true;
+    } catch (e) { console.error('auth check failed', e); window.location.href = '/login.html'; return false; }
+}
+
+async function fetchStats() {
+    try {
+        const res = await fetchWithAuth('/get-logs?limit=1');
+        if (!res.ok) return; // likely unauthorized
+        const summary = await res.json();
+        document.getElementById('stat-total').innerText = summary.length || '—';
+        // Additional stats can be implemented using specialized endpoints
+    } catch (e) { console.warn('stats fetch failed', e); }
+}
+
+async function fetchLogs() {
+    try {
+        let query = '?limit=500';
+        if (selectedDeviceId) query = `?deviceId=${encodeURIComponent(selectedDeviceId)}&limit=500`;
+        else if (selectedCountry) query = `?country=${encodeURIComponent(selectedCountry)}&limit=500`;
+        const res = await fetchWithAuth('/get-logs' + query);
+        logs = await res.json();
+        applySearchAndRender();
+    } catch (err) { console.error('fetchLogs err', err); }
+}
+
+function applySearchAndRender() {
+    const q = document.getElementById('search-input').value.trim().toLowerCase();
+    filtered = logs.filter(l => {
+        if (!q) return true;
+        return [l.deviceId, l.device, l.sender, l.message, l.location].join(' ').toLowerCase().includes(q);
+    });
+    document.getElementById('results-count').innerText = `Showing ${Math.min((page-1)*pageSize+1, filtered.length)}-${Math.min(page*pageSize, filtered.length)} of ${filtered.length} entries`;
+    renderPage();
+}
+
+function renderPage() {
+    const start = (page-1)*pageSize;
+    const pageItems = filtered.slice(start, start+pageSize);
+    const tbody = document.getElementById('logs-body');
+    if (pageItems.length === 0) {
+        tbody.innerHTML = `<tr><td class="px-6 py-5 text-center text-white/40" colspan="7">No records</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = pageItems.map(item => {
+        const loc = (item.location && item.location !== 'Disabled') ? `<a class="text-primary hover:underline" target="_blank" href="https://www.google.com/maps?q=${item.location}">Show on Map</a>` : '<span class="text-white/40">No Data</span>';
+        const msgShort = (item.message || '').length > 80 ? (item.message || '').slice(0,80) + '…' : (item.message || '');
+        return `
+        <tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+            <td class="px-6 py-5 font-mono text-sm nowrap">${item.deviceId || '—'}</td>
+            <td class="px-6 py-5">
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-white">${item.device || 'Unknown'}</span>
+                    <span class="text-[10px] text-white/40 uppercase">${item.type || ''}</span>
+                </div>
+            </td>
+            <td class="px-6 py-5">${item.sender || '—'}</td>
+            <td class="px-6 py-5">${escapeHtml(msgShort)}</td>
+            <td class="px-6 py-5">${item.time ? new Date(item.time).toLocaleString() : ''}</td>
+            <td class="px-6 py-5 text-right">${loc}</td>
+            <td class="px-6 py-5 text-right">
+                <button class="bg-primary text-background-dark px-4 py-2 rounded font-bold text-xs uppercase shadow-lg shadow-primary/10" onclick="exportRowPdf('${item._id}')">Export PDF</button>
+            </td>
+        </tr>`;
+    }).join('');
+    document.getElementById('page-indicator').innerText = page;
+    document.getElementById('page-count').innerText = Math.max(1, Math.ceil(filtered.length / pageSize));
+    document.getElementById('prev-page').disabled = page === 1;
+}
+
+function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+document.getElementById('search-input').addEventListener('input', () => { page=1; applySearchAndRender(); });
+document.getElementById('prev-page').addEventListener('click', () => { if (page>1) { page--; renderPage(); } });
+document.getElementById('next-page').addEventListener('click', () => { page++; renderPage(); });
+
+document.getElementById('export-csv').addEventListener('click', () => {
+    const rows = filtered.map(r => ({ deviceId: r.deviceId, device: r.device, sender: r.sender, message: r.message, time: r.time, location: r.location }));
+    const csv = toCsv(rows);
+    downloadBlob(csv, 'logs.csv', 'text/csv');
+});
+
+function toCsv(rows) {
+    const keys = ['deviceId','device','sender','message','time','location'];
+    const header = keys.join(',') + '\n';
+    const lines = rows.map(r => keys.map(k => '"' + String((r[k]||'')).replace(/"/g,'""') + '"').join(',')).join('\n');
+    return header + lines;
+}
+
+function downloadBlob(content, name, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+async function exportRowPdf(id) {
+    try {
+        const res = await fetchWithAuth('/evidence', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ ids: [id] }) });
+        if (!res.ok) return alert('Failed to generate PDF');
+        const blob = await res.blob();
+        downloadBlob(blob, `tiger_evidence_${id}.pdf`, 'application/pdf');
+    } catch (e) { console.error('export pdf err', e); alert('Export failed'); }
+}
+
+async function fetchUsers() {
+    try {
+        const res = await fetchWithAuth('/users');
+        const users = await res.json();
+        const container = document.getElementById('users-list');
+        if (!users || users.length === 0) { container.innerHTML = '<div class="text-white/40">No users</div>'; return; }
+        container.innerHTML = users.map(u => `<div class="p-2 border border-border-dark rounded flex items-center justify-between"><div><div class="font-bold">${u.deviceId}</div><div class="text-xs text-white/40">${u.telegramChatId ? 'TG: '+u.telegramChatId : 'No TG'}</div></div><div class="flex flex-col gap-1"><button class="text-xs text-primary" onclick="selectDevice('${u.deviceId}')">View</button><button class="text-xs text-white/40" onclick="prefillUser('${u.deviceId}','${u.telegramBotToken||''}','${u.telegramChatId||''}')">Edit</button></div></div>`).join('');
+    } catch (e) { console.warn('fetch users failed', e); }
+}
+
+function selectDevice(id) { selectedDeviceId = id; selectedCountry = null; fetchLogs(); }
+
+function prefillUser(deviceId, bot, chat) { document.getElementById('u-deviceId').value = deviceId || ''; document.getElementById('u-bot').value = bot || ''; document.getElementById('u-chat').value = chat || ''; }
+
+document.getElementById('save-user').addEventListener('click', async () => {
+    const deviceId = document.getElementById('u-deviceId').value.trim();
+    const bot = document.getElementById('u-bot').value.trim();
+    const chat = document.getElementById('u-chat').value.trim();
+    if (!deviceId) return alert('deviceId required');
+    try {
+        const res = await fetchWithAuth('/users', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ deviceId, telegramBotToken: bot||null, telegramChatId: chat||null }) });
+        if (res.ok) { alert('Saved'); fetchUsers(); } else alert('Save failed');
+    } catch (e) { console.error('save user', e); alert('Save failed'); }
+});
+
+document.getElementById('download-evidence').addEventListener('click', async () => {
+    if (!selectedDeviceId && !selectedCountry) return alert('Select a device or country first');
+    try {
+        const body = selectedDeviceId ? { deviceId: selectedDeviceId, limit: 1000 } : { limit: 1000, country: selectedCountry };
+        const res = await fetchWithAuth('/evidence', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+        if (!res.ok) return alert('Failed to generate evidence');
+        const blob = await res.blob();
+        downloadBlob(blob, `tiger_evidence_${selectedDeviceId||selectedCountry||'logs'}.pdf`, 'application/pdf');
+    } catch (e) { console.error('download evidence', e); alert('Failed'); }
+});
+
+// Countries
+async function fetchCountries() {
+    try {
+        const res = await fetchWithAuth('/stats/countries');
+        const arr = await res.json();
+        const container = document.getElementById('countries-list');
+        if (!arr || arr.length === 0) { container.innerHTML = '<div class="text-white/40">No countries</div>'; return; }
+        container.innerHTML = arr.map(c => `<div class="flex items-center justify-between p-2 border border-border-dark rounded"><div><div class="font-bold">${c.country}</div><div class="text-xs text-white/40">${c.code}</div></div><div><div class="text-sm font-bold text-white/80">${c.count}</div><button class="text-xs text-primary mt-1" onclick="selectCountry('${c.code}')">View</button></div></div>`).join('');
+    } catch (e) { console.warn('fetch countries', e); }
+}
+function selectCountry(code) { selectedCountry = code; selectedDeviceId = null; fetchLogs(); }
+
+// Initial load
+(async function init(){
+    const ok = await ensureAuth();
+    if (!ok) return;
+    fetchStats(); fetchUsers(); fetchCountries(); fetchLogs();
+})();
+
+function logout(){ setToken(null); window.location.href = '/login.html'; }
+</script>
+</body></html>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'JetBrains Mono', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #05070a; color: #fff; margin: 0; padding: 20px; }
@@ -214,7 +616,7 @@
 
         async function clearLogs() {
             if (confirm('Kya aap saare logs delete karna chahte hain?')) {
-                await fetch('/clear-logs', { method: 'POST' });
+                await fetchWithAuth('/clear-logs', { method: 'POST' });
                 fetchLogs();
             }
         }

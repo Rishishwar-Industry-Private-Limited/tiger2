@@ -2,10 +2,16 @@ const express = require('express');
 const router = express.Router();
 const SmsLog = require('../models/SmsLog');
 const logsRouter = require('./logs');
-const crg = require('country-reverse-geocoding').country_reverse_geocoding();
+let crg = null;
+try {
+  crg = require('country-reverse-geocoding').country_reverse_geocoding();
+} catch (e) {
+  console.warn('[stats] country-reverse-geocoding not installed; country features disabled');
+}
 
 // GET /stats/countries -> returns array [{ country: 'India', code: 'IN', count: 12 }]
-router.get('/countries', async (req, res) => {
+const { requireAuth } = require('../middleware/auth');
+router.get('/countries', requireAuth, async (req, res) => {
   try {
     let logs = [];
     try {
@@ -18,6 +24,8 @@ router.get('/countries', async (req, res) => {
         return res.status(503).json({ error: 'No DB and no in-memory logs available' });
       }
     }
+
+    if (!crg) return res.status(501).json({ error: 'Reverse geocoding not available on server' });
 
     const counts = {};
     for (const l of logs) {

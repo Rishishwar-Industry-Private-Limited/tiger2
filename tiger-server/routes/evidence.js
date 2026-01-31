@@ -6,7 +6,8 @@ const logsRouter = require('./logs');
 
 // POST /evidence -> generate a PDF of logs for a device or specific ids
 // Body: { deviceId?: string, ids?: [id1, id2], limit?: number }
-router.post('/evidence', async (req, res) => {
+const { requireAuth } = require('../middleware/auth');
+router.post('/evidence', requireAuth, async (req, res) => {
   try {
     const { deviceId, ids = [], limit = 200 } = req.body || {};
 

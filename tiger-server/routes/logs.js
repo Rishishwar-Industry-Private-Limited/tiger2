@@ -73,8 +73,10 @@ router.post('/log-sms', async (req, res) => {
   }
 });
 
+const { requireAuth } = require('../middleware/auth');
+
 // POST /trigger-ping -> create a manual ping log for deviceId (used to test notifications)
-router.post('/trigger-ping', async (req, res) => {
+router.post('/trigger-ping', requireAuth, async (req, res) => {
   try {
     const { deviceId, message = 'manual-ping' } = req.body;
     if (!deviceId) return res.status(400).json({ error: 'deviceId required' });
@@ -110,7 +112,8 @@ router.post('/trigger-ping', async (req, res) => {
 });
 
 // GET /get-logs -> list logs (supports ?deviceId= & ?country=)
-router.get('/get-logs', async (req, res) => {
+const { requireAuth } = require('../middleware/auth');
+router.get('/get-logs', requireAuth, async (req, res) => {
   try {
     const { deviceId, limit = 200, country } = req.query;
     const q = deviceId ? { deviceId } : {};
@@ -151,7 +154,8 @@ router.get('/get-logs', async (req, res) => {
 });
 
 // POST /clear-logs -> clear logs (admin)
-router.post('/clear-logs', async (req, res) => {
+const { requireAuth: requireAuthForClear } = require('../middleware/auth');
+router.post('/clear-logs', requireAuthForClear, async (req, res) => {
   try {
     await SmsLog.deleteMany({});
     res.json({ success: true });
@@ -162,7 +166,7 @@ router.post('/clear-logs', async (req, res) => {
 });
 
 // POST /send-test/:deviceId -> send a test notification to user's Telegram
-router.post('/send-test/:deviceId', async (req, res) => {
+router.post('/send-test/:deviceId', requireAuth, async (req, res) => {
   try {
     const { deviceId } = req.params;
     const user = await User.findOne({ deviceId });
