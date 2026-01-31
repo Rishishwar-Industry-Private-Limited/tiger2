@@ -9,11 +9,24 @@ const WebDashboard = () => {
     // Render server se data fetch karna
     const fetchData = async () => {
       try {
+        console.log(`[WebDashboard] Fetching logs from: https://sms-bridge-service.onrender.com/get-logs`);
         const response = await fetch('https://sms-bridge-service.onrender.com/get-logs');
+        console.log(`[WebDashboard] Fetch Response Status: ${response.status}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[WebDashboard] HTTP Error ${response.status}: ${errorText}`);
+          throw new Error(`HTTP Error! Status: ${response.status}`);
+        }
         const data = await response.json();
+        console.log(`[WebDashboard] Fetched ${data.length} logs`);
         setLogs(data);
       } catch (error) {
-        console.log("Web Fetch Error:", error);
+        console.error("[WebDashboard] Web Fetch Error:", error.message);
+        console.error("[WebDashboard] Full Error:", error);
+        // Handle common issues
+        if (error.message.includes('Network request failed')) {
+          console.warn("[WebDashboard] Possible issues: HTTPS required, cleartext traffic blocked, wrong URL, CORS, or server down.");
+        }
       }
     };
 

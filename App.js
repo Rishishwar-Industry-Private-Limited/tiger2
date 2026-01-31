@@ -2,12 +2,54 @@ import React, { useEffect } from 'react';
 import { Platform, View, StyleSheet, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location'; // Background tracking ke liye zaruri
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 
 // Custom Hooks & Screens
 import usePermissions from './src/hooks/usePermissions';
 import useTracking from './src/hooks/useTracking';
 import HomeScreen from './src/screens/HomeScreen';
 import WebDashboard from './src/screens/WebDashboard';
+
+// Define Background Task
+const BACKGROUND_FETCH_TASK = 'background-fetch';
+
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  console.log('[Background Task] Running background fetch task');
+  try {
+    const response = await fetch('https://httpbin.org/post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Background task running', timestamp: new Date().toISOString() })
+    });
+    const data = await response.json();
+    console.log('[Background Task] POST Success:', data);
+    return BackgroundFetch.BackgroundFetchResult.NewData;
+  } catch (error) {
+    console.error('[Background Task] POST Failed:', error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Register the task
+const registerBackgroundFetchAsync = async () => {
+  try {
+    await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+      minimumInterval: 60 * 15, // 15 minutes
+      stopOnTerminate: false, // Keep running after app terminates
+      startOnBoot: true, // Start on device boot
+    });
+    console.log('[Background Task] Registered successfully');
+
+    // Force foreground service notification (if supported)
+    if (Platform.OS === 'android') {
+      await BackgroundFetch.setMinimumIntervalAsync(60 * 15);
+      console.log('[Background Task] Foreground service enforced');
+    }
+  } catch (err) {
+    console.error('[Background Task] Registration failed:', err);
+  }
+};
 
 export default function App() {
   const permissionStatus = usePermissions();
@@ -25,10 +67,26 @@ export default function App() {
             [{ text: "OK", onPress: () => Location.requestBackgroundPermissionsAsync() }]
           );
         }
+
+        // Disable battery optimization
+        try {
+          const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log("[✓] Battery optimization disabled");
+          } else {
+            console.warn("[X] Battery optimization not disabled - tasks may be killed");
+            Alert.alert("Warning", "Please disable battery optimization for this app in settings.");
+          }
+        } catch (err) {
+          console.error("Battery optimization request failed:", err);
+        }
       }
     };
     
     checkBackgroundTracking();
+
+    // Register background fetch task
+    registerBackgroundFetchAsync();
   }, [permissionStatus]);
 
   // SMS aur Server Sync trigger

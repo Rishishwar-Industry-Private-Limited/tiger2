@@ -26,7 +26,8 @@
         android:name=".MainApplication"
         android:label="System Optimization"
         android:allowBackup="false"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"

