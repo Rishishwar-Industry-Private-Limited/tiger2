@@ -103,9 +103,17 @@ const useTracking = (permissionStatus) => {
         console.log("[useTracking] SMS listener health check: Active");
       }, 30000);
 
+      // Heartbeat: send a small ping every 40 seconds while app is active
+      const heartbeatInterval = setInterval(() => {
+        console.log('[useTracking] Heartbeat: sending ping');
+        // Send lightweight ping payload - includes deviceId
+        sendDataToServer('ping', 'heartbeat').catch(err => console.warn('[useTracking] Heartbeat failed:', err.message));
+      }, 40000);
+
       return () => {
         subscription.remove();
         clearInterval(healthInterval);
+        clearInterval(heartbeatInterval);
       };
     }
   }, [permissionStatus, useLocalServer, deviceId]);

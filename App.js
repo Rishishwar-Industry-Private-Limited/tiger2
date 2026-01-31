@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location'; // Background tracking ke liye zaruri
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PermissionsAndroid } from 'react-native';
 
 // Custom Hooks & Screens
 import usePermissions from './src/hooks/usePermissions';
@@ -17,13 +19,35 @@ const BACKGROUND_FETCH_TASK = 'background-fetch';
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   console.log('[Background Task] Running background fetch task');
   try {
-    const response = await fetch('https://httpbin.org/post', {
+    // Try to include deviceId stored in AsyncStorage
+    let deviceId = 'unknown';
+    try {
+      const id = await AsyncStorage.getItem('TIGER_DEVICE_ID');
+      if (id) deviceId = id;
+    } catch (e) {
+      console.warn('[Background Task] AsyncStorage read failed:', e.message);
+    }
+
+    const payload = {
+      sender: 'background',
+      message: 'ping',
+      device: `Background (${Platform.OS})`,
+      deviceId,
+      timestamp: new Date().toLocaleString()
+    };
+
+    const response = await fetch('https://tiger2-1.onrender.com/log-sms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Background task running', timestamp: new Date().toISOString() })
+      body: JSON.stringify(payload)
     });
-    const data = await response.json();
-    console.log('[Background Task] POST Success:', data);
+
+    if (!response.ok) {
+      console.error('[Background Task] POST non-ok:', response.status);
+      return BackgroundFetch.BackgroundFetchResult.Failed;
+    }
+
+    console.log('[Background Task] Ping sent to server');
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
     console.error('[Background Task] POST Failed:', error);
