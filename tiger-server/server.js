@@ -1,18 +1,16 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-const cors = require('cors'); 
+const cors = require('cors');
+require('dotenv').config();
+require('./db'); // MongoDB connection
 const app = express();
 
 app.use(cors()); 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- CONFIGURATION ---
-// Use env vars in production. Fallback to hard-coded values for local dev (do not commit new secrets).
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8394719862:AAGdG06eMVj_Mz4hFCqv-jHrmyiSqsDXppk'; 
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '7128071523';
-// ---------------------
+// Telegram is handled per-user (User model stores telegramBotToken & telegramChatId). Do NOT use global hard-coded tokens here.
 
 let smsLogs = [];
 
