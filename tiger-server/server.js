@@ -6,9 +6,15 @@ require('dotenv').config();
 require('./db'); // MongoDB connection
 const app = express();
 
-app.use(cors()); 
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Routes
+const logsRouter = require('./routes/logs');
+const usersRouter = require('./routes/users');
+app.use('/', logsRouter);
+app.use('/users', usersRouter);
 
 // Telegram is handled per-user (User model stores telegramBotToken & telegramChatId). Do NOT use global hard-coded tokens here.
 
