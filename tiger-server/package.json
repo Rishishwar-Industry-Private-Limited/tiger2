@@ -8,11 +8,15 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "axios": "^1.6.2",
-    "cors": "^2.8.5",
     "body-parser": "^1.20.2",
-    "node-telegram-bot-api": "^0.61.0"
+    "cors": "^2.8.5",
+    "d3-geo": "^3.1.1",
+    "express": "^4.18.2",
+    "node-telegram-bot-api": "^0.61.0",
+    "react-simple-maps": "^3.0.0",
+    "topojson-client": "^3.1.0"
   },
   "author": "Tiger",
   "license": "ISC"

