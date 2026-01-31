@@ -112,7 +112,7 @@ router.post('/trigger-ping', requireAuth, async (req, res) => {
 });
 
 // GET /get-logs -> list logs (supports ?deviceId= & ?country=)
-const { requireAuth } = require('../middleware/auth');
+
 router.get('/get-logs', requireAuth, async (req, res) => {
   try {
     const { deviceId, limit = 200, country } = req.query;
