@@ -8,6 +8,7 @@ const smsLogSchema = new Schema({
   message: { type: String, default: 'No Content' },
   time: { type: Date, default: () => new Date() },
   location: { type: String, default: 'Disabled' },
+  type: { type: String, default: 'sms' }, // 'sms' | 'ping' | 'manual'
   meta: { type: Schema.Types.Mixed, default: {} }
 });
 

