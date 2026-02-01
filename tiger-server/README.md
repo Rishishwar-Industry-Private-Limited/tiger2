@@ -24,3 +24,15 @@ This folder runs the Express server that receives `/log-sms` payloads and provid
 - If MongoDB is not available the server will fall back to an in-memory store for recent logs.
 - For telegram notifications you must configure per-user `telegramBotToken` and `telegramChatId` via the admin UI.
 - Do not commit secret tokens into the repo. Use environment variables or a secrets manager.
+
+## Photo Uploads
+We now accept photo uploads via `POST /upload-photo` (multipart form, field `photo`). The endpoint stores the file in `tiger-server/uploads/` and records metadata in the `PhotoLog` Mongo collection. Use `GET /get-photos` to list recent uploaded photos.
+
+Example cURL:
+
+```bash
+curl -F "photo=@./selfie.jpg" -F "deviceId=phone-123" http://localhost:10000/upload-photo
+```
+
+Make sure to run `npm install` in `tiger-server` to pick up `multer`.
+

@@ -46,3 +46,37 @@ export const sendDataToServer = async (endpoint, payload) => {
     return null;
   }
 };
+
+// Upload a photo (FormData with 'photo' file field). Returns { success, filename, path }
+export const uploadPhoto = async (fileUri, filename, deviceId = '') => {
+  try {
+    const targetUrl = `${API_URL}upload-photo`;
+
+    console.log(`[ApiService] Uploading photo to ${targetUrl}`);
+
+    const body = new FormData();
+    // Note: React Native form-data expects { uri, name, type }
+    body.append('photo', { uri: fileUri, name: filename || 'photo.jpg', type: 'image/jpeg' });
+    body.append('deviceId', deviceId);
+
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        // DO NOT set Content-Type; let fetch set multipart boundary
+      },
+      body
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Upload failed ${response.status}: ${err}`);
+    }
+
+    const json = await response.json();
+    return json;
+  } catch (err) {
+    console.error('[ApiService] uploadPhoto error', err);
+    return null;
+  }
+};

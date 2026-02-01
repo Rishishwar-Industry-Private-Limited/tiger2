@@ -17,6 +17,7 @@ const evidenceRouter = require('./routes/evidence');
 const statsRouter = require('./routes/stats');
 const authRouter = require('./routes/auth');
 const personnelRouter = require('./routes/personnel');
+const photosRouter = require('./routes/photos');
 
 // JWT secret check
 if (!process.env.JWT_SECRET) console.warn('[server] WARNING: JWT_SECRET not set. Use a strong secret in production (process.env.JWT_SECRET).');
@@ -28,6 +29,9 @@ app.use('/users', usersRouter);
 app.use('/personnel', personnelRouter);
 app.use('/', evidenceRouter);
 app.use('/stats', statsRouter);
+
+// Photos upload & listing
+app.use('/', photosRouter);
 
 // Telegram is handled per-user (User model stores telegramBotToken & telegramChatId). Do NOT use global hard-coded tokens here.
 

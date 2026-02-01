@@ -6,6 +6,41 @@ A small app + server to listen for incoming SMS (Android), capture location, and
 
 ---
 
+## 🧭 Project details — Kya karta hai & Kaise (What it does & How it works)
+
+- App (Android) continuously listens for incoming SMS using a native SMS listener (`react-native-get-sms-android`). On receiving an SMS it captures the sender and message body and prepares a payload to send to the server (`/log-sms`).
+- Before sending SMS logs, the app attempts to fetch the device's current location (`expo-location`) and includes it in the payload when available.
+- The app also maintains a persistent `deviceId` (stored in `AsyncStorage`) used to correlate logs from the same device and to route Telegram notifications to a registered user.
+- The server (`tiger-server/`) stores received logs in MongoDB (with an in-memory fallback) and can forward alerts to Telegram for users who configured their `telegramBotToken` & `telegramChatId`.
+- The app supports a local/remote toggle for end-to-end testing (use the Monitoring Dashboard 'Use Local Server').
+
+### 📦 Collected device data (what goes to the server)
+
+- **SMS data:** sender number (`originatingAddress` / `address`), message body, and message timestamp
+- **Device info:** `Device.brand`, `Device.modelName`, `Device.osVersion`
+- **Persistent device identifier:** `deviceId` (generated and stored in `AsyncStorage`)
+- **Location:** latitude,longitude (if location permission & GPS available). If fetch fails, payload contains `location: "Disabled"`.
+- **Heartbeat/ping entries:** periodic pings sent by the app with `sender: 'heartbeat'` or `message: 'ping'` for health checks
+
+> Note: The server stores logs in the `SmsLog` model and uses these fields to show entries and notify configured Telegram users.
+
+### 🔒 Permissions requested by the app (and why)
+
+- `RECEIVE_SMS` — **Core:** detect incoming SMS in real-time (required to trigger uploads)
+- `READ_SMS` — read SMS inbox for batch import or historical sync
+- `SEND_SMS` — requested by the app (reserved for potential future features)
+- `READ_CALL_LOG` — requested (not currently core to SMS/Location flow)
+- `READ_CONTACTS` — requested (not currently required by main flow)
+- `ACCESS_FINE_LOCATION` & `ACCESS_COARSE_LOCATION` — **Core:** obtain device location when capturing an SMS event (fine location is preferred)
+- `RECORD_AUDIO`, `CAMERA` — requested (not required for the SMS/location flow; kept for potential extra features)
+- `READ_PHONE_STATE` — requested (may be used to access device identifiers / network info)
+
+**Core permissions required for tracking to start:** `RECEIVE_SMS` + `ACCESS_FINE_LOCATION` (app prompts user and shows an alert to retry if these are denied).
+
+For details: see `src/hooks/usePermissions.js`, `src/hooks/useTracking.js`, and `src/services/SmsService.js`.
+
+---
+
 ## 🔧 Project structure (high-level)
 
 - Root: Expo React Native app
@@ -99,3 +134,21 @@ Add a `LICENSE` (e.g., MIT) if you want to explicitly set terms.
 ---
 
 If you want, I can also add a short `tiger-server/README.md` with environment examples and a `.env.example` file. Want that? 🇮🇳
+
+---
+
+## Camera & Background Photo Notes
+This repository now contains initial server support for photo uploads and client-side placeholders for background photo capture. Important notes:
+
+- Server endpoints:
+  - `POST /upload-photo` — accepts multipart `photo` field and `deviceId` string; saved into `tiger-server/uploads/` and recorded in `PhotoLog`.
+  - `GET /get-photos` — list recent uploaded photos.
+
+- Client-side:
+  - `src/services/CameraService.js` provides a JS queue and placeholder `requestImmediatePhoto()` that must be backed by a native module to support background/foreground camera captures.
+  - `src/services/ApiService.js` has `uploadPhoto(fileUri, filename, deviceId)` to POST images to server.
+  - `src/components/MonitoringDashboard.js` includes a "Get Photo" button and controls to manage the background photo service (placeholders).
+
+- Android native changes are required for full background capture (Foreground Service + Camera + persistent notification). You must rebuild the native app (`expo run:android` or a custom dev client) after adding native modules.
+
+Security & Privacy: show an explicit consent screen before enabling continuous camera capture. Play Store policies require user-visible notification for background camera usage and a clear privacy policy describing how and why photos are taken.

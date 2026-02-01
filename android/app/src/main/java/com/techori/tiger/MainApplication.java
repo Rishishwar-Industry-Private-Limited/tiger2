@@ -24,11 +24,7 @@ public class MainApplication extends Application implements ReactApplication {
           @SuppressWarnings("UnusedAssignment")
           List<ReactPackage> packages = new PackageList(this).getPackages();
           // Yahan extra native packages add kiye ja sakte hain
-          return packages;
-        }
-
-        @Override
-        protected String getJSMainModuleName() {
+          packages.add(new MyAppPackage());
           return "index";
         }
 

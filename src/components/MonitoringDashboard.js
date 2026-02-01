@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, Button, StyleSheet, Alert, Image } from 'react-native';
+import CameraService from '../services/CameraService';
 import usePermissions from '../hooks/usePermissions';
 import useTracking from '../hooks/useTracking';
 
@@ -8,6 +9,7 @@ const MonitoringDashboard = () => {
   const { useLocalServer, setUseLocalServer, deviceId } = useTracking(permissionStatus);
   const [logs, setLogs] = useState([]);
   const [serverStatus, setServerStatus] = useState('Checking...');
+  const [latestPhoto, setLatestPhoto] = useState(null);
 
   // Simulate logs (in real app, collect from hooks or AsyncStorage)
   useEffect(() => {
@@ -119,6 +121,46 @@ const MonitoringDashboard = () => {
         <Text style={styles.subtitle}>Actions</Text>
         <Button title="Force Background Task" onPress={() => Alert.alert('Info', 'Background task runs every 15min')} />
         <Button title="Clear Logs" onPress={() => setLogs([])} />
+
+        <View style={{marginTop:12}}>
+          <Text style={{fontWeight:'bold'}}>Camera</Text>
+          <Text>Get an immediate photo from device camera (foreground only for now)</Text>
+          <View style={{flexDirection:'row', gap:8, marginTop:8}}>
+            <Button title="Get Photo" onPress={async () => {
+              try {
+                const img = await CameraService.requestImmediatePhoto({ camera: 'front' });
+                if (!img || !img.uri) {
+                  Alert.alert('Not Supported', 'Immediate photo capture is not yet implemented on this build. Native module required.');
+                  return;
+                }
+                setLatestPhoto(img.uri);
+              } catch (e) { Alert.alert('Error', e.message); }
+            }} />
+            <Button title="Upload Queue" onPress={async () => {
+              try {
+                const uploaded = await CameraService.uploadQueuedPhotos(deviceId);
+                Alert.alert('Upload', `Uploaded ${uploaded} photos`);
+              } catch (e) { Alert.alert('Error', e.message); }
+            }} />
+          </View>
+
+          <View style={{marginTop:12}}>
+            <Text style={{fontWeight:'bold'}}>Background Photo Service</Text>
+            <Text>Runs foreground service to capture photos periodically (requires Android native module and clear consent)</Text>
+            <View style={{flexDirection:'row', gap:8, marginTop:8}}>
+              <Button title="Start Service" onPress={() => Alert.alert('Info', 'Start service requires native implementation. Follow README to build native module.')} />
+              <Button title="Stop Service" onPress={() => Alert.alert('Info', 'Stop service requires native implementation.')} />
+            </View>
+          </View>
+          
+          {/** preview placeholder - once requestImmediatePhoto returns { uri } we can render it here */}
+          {latestPhoto ? (
+            <View style={{marginTop:12}}>
+              <Text style={{fontWeight:'bold'}}>Latest Photo Preview</Text>
+              <Image source={{ uri: latestPhoto }} style={{ width: 200, height: 300, marginTop:8 }} />
+            </View>
+          ) : null}
+        </View>
       </View>
     </ScrollView>
   );
