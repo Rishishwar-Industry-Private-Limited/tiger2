@@ -5,6 +5,9 @@ const PhotoLog = require('../models/PhotoLog');
 
 const router = express.Router();
 
+// Fallback in-memory photos
+let inMemoryPhotos = [];
+
 // Save uploads to ./uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -32,7 +35,22 @@ router.post('/upload-photo', upload.single('photo'), async (req, res) => {
       meta: req.body.meta ? JSON.parse(req.body.meta) : {}
     });
 
-    await newLog.save();
+    try {
+      await newLog.save();
+    } catch (dbErr) {
+      console.warn('[photos] DB save failed, falling back to in-memory:', dbErr.message);
+      inMemoryPhotos.unshift({
+        _id: Date.now(),
+        filename: newLog.filename,
+        originalName: newLog.originalName,
+        size: newLog.size,
+        deviceId: newLog.deviceId,
+        uploadedAt: newLog.uploadedAt,
+        meta: newLog.meta
+      });
+      if (inMemoryPhotos.length > 500) inMemoryPhotos.pop();
+      return res.json({ success: true, filename: newLog.filename, path: `/uploads/${newLog.filename}` });
+    }
 
     // Keep it simple: return filename and path relative to server
     res.json({ success: true, filename: req.file.filename, path: `/uploads/${req.file.filename}` });
@@ -48,8 +66,8 @@ router.get('/get-photos', async (req, res) => {
     const list = await PhotoLog.find().sort({ uploadedAt: -1 }).limit(50);
     res.json({ success: true, photos: list });
   } catch (err) {
-    console.error('[photos] List error', err);
-    res.status(500).json({ error: 'Failed to list photos' });
+    console.warn('[photos] DB query failed, returning in-memory photos:', err.message);
+    return res.json({ success: true, photos: inMemoryPhotos.slice(0, 50) });
   }
 });
 

@@ -7,7 +7,10 @@
     "start": "node server.js",
     "dev": "NODE_ENV=development JWT_SECRET=dev_secret ADMIN_SETUP_TOKEN=dev_token MONGO_URI=mongodb://localhost:27017/tiger2 node server.js",
     "lint": "eslint .",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "web:install": "cd web && npm install",
+    "web:dev": "cd web && npm run dev",
+    "web:build": "cd web && npm run build"
   },
   "dependencies": {
     "axios": "^1.6.2",

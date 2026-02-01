@@ -160,3 +160,5 @@ const useTracking = (permissionStatus) => {
 
   return { useLocalServer, setUseLocalServer, deviceId, readHeartbeatSettings, setHeartbeatEnabled, setHeartbeatInterval };
 };
+
+export default useTracking;

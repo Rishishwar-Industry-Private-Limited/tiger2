@@ -6,41 +6,18 @@ const { width } = Dimensions.get('window');
 const MAP_WIDTH = Math.min(1000, width - 80);
 const MAP_HEIGHT = Math.round(MAP_WIDTH / 2);
 
-// Helper: equirectangular projection (approx)
-const latLonToXY = (lat, lon, w = MAP_WIDTH, h = MAP_HEIGHT) => {
-  const x = ((lon + 180) / 360) * w;
-  const y = ((90 - lat) / 180) * h;
-  return { x, y };
-};
-
-const NeonMetric = ({ title, value, color }) => (
+const NeonMetric = ({ title, value, color }: { title: string; value: any; color: string }) => (
   <View style={[styles.metricCard, { borderColor: color, shadowColor: color }]}> 
     <Text style={styles.metricTitle}>{title}</Text>
     <Text style={[styles.metricValue, { color }]}>{value}</Text>
   </View>
 );
 
-const PulseMarker = ({ x, y }) => {
-  const scale = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(scale, { toValue: 1, duration: 1200, useNativeDriver: true }),
-        Animated.timing(scale, { toValue: 0, duration: 1200, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
-  return (
-    <Animated.View style={[styles.marker, { left: x - 8, top: y - 8, transform: [{ scale }] }]} />
-  );
-};
-
-const WebDashboard = () => {
-  const [logs, setLogs] = useState([]);
-  const [consoleLines, setConsoleLines] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const slideAnim = useRef(new Animated.Value(1)).current; // 1 => hidden, 0 => visible
+const WebDashboard: React.FC = () => {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [consoleLines, setConsoleLines] = useState<string[]>([]);
+  const [selected, setSelected] = useState<any | null>(null);
+  const slideAnim = useRef<any>(new Animated.Value(1)).current; // 1 => hidden, 0 => visible
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +27,7 @@ const WebDashboard = () => {
         const data = await response.json();
         setLogs(data);
         setConsoleLines(prev => [`Fetched ${data.length} logs at ${new Date().toLocaleTimeString()}`, ...prev].slice(0, 200));
-      } catch (err) {
+      } catch (err: any) {
         setConsoleLines(prev => [`Fetch error: ${err.message} - ${new Date().toLocaleTimeString()}`, ...prev].slice(0, 200));
       }
     };
@@ -60,7 +37,7 @@ const WebDashboard = () => {
     return () => clearInterval(id);
   }, []);
 
-  const openDossier = (item) => {
+  const openDossier = (item: any) => {
     setSelected(item);
     Animated.timing(slideAnim, { toValue: 0, duration: 350, useNativeDriver: true }).start();
   };
@@ -68,19 +45,16 @@ const WebDashboard = () => {
     Animated.timing(slideAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start(() => setSelected(null));
   };
 
-  // Metrics derived from logs (simple counts / dummies)
   const total = logs.length;
   const live = logs.filter(l => l.location && l.location !== 'Disabled').length;
-  const vpn = Math.floor(Math.random() * 10); // placeholder
+  const vpn = Math.floor(Math.random() * 10);
   const harvested = (logs.reduce((s, l) => s + (l.message ? l.message.length : 0), 0));
 
-  // Map markers - logs with location
   const markers = logs
-    .map(l => ({ ...l, coords: (l.location && l.location !== 'Disabled') ? l.location.split(',').map(s => Number(s.trim())) : null }))
-    .filter(l => l.coords && l.coords.length === 2)
-    .map(l => ({ id: l.id, lat: l.coords[0], lon: l.coords[1], item: l }));
+    .map((l: any) => ({ ...l, coords: (l.location && l.location !== 'Disabled') ? l.location.split(',').map((s: string) => Number(s.trim())) : null }))
+    .filter((l: any) => l.coords && l.coords.length === 2)
+    .map((l: any) => ({ id: l.id, lat: l.coords[0], lon: l.coords[1], item: l }));
 
-  // static sample markers (India, USA, Japan)
   const staticMarkers = [
     { id: 'india', lat: 20.5937, lon: 78.9629 },
     { id: 'usa', lat: 37.0902, lon: -95.7129 },
@@ -99,7 +73,6 @@ const WebDashboard = () => {
       </View>
 
       <View style={{display:'flex', flexDirection:'row', gap:20}}>
-        {/* Sidebar */}
         <View style={styles.sidebar}>
           <Text style={styles.sidebarItem}>🏠 Dashboard</Text>
           <Text style={styles.sidebarItem}>🎯 Targets</Text>
@@ -120,12 +93,13 @@ const WebDashboard = () => {
               <Text style={styles.cardTitle}>Global Targets</Text>
               <Text style={styles.cardSub}>Realtime map with pulsing alerts</Text>
 
-              {/* Web map using react-simple-maps (only on web) */}
               {typeof window !== 'undefined' ? (
+                // using "div" here since react-simple-maps expects DOM elements on web
+                // types are allowed via src/types/react-native-web.d.ts
                 <div style={{ width: MAP_WIDTH, height: MAP_HEIGHT }}>
                   <ComposableMap projectionConfig={{ scale: 140 }} width={MAP_WIDTH} height={MAP_HEIGHT}>
                     <Geographies geography={'https://unpkg.com/world-atlas@2.0.2/world/110m.json'}>
-                      {({ geographies }) => geographies.map(geo => (
+                      {({ geographies }: any) => geographies.map((geo: any) => (
                         <Geography key={geo.rsmKey} geography={geo} fill={'rgba(255,255,255,0.02)'} stroke={'#0b0d0f'} />
                       ))}
                     </Geographies>
@@ -189,7 +163,6 @@ const WebDashboard = () => {
             </View>
           </View>
 
-          {/* Bottom console strip */}
           <View style={styles.consoleStrip}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {consoleLines.map((c, i) => (
@@ -198,9 +171,8 @@ const WebDashboard = () => {
             </ScrollView>
           </View>
 
-          {/* Dossier slide-over */}
           {selected && (
-            <Animated.View style={[styles.slideOver, { transform: [{ translateX: slideAnim.interpolate({ inputRange: [0,1], outputRange: [0, 600] }) }] }]}>
+            <Animated.View style={[styles.slideOver, { transform: [{ translateX: (slideAnim.interpolate as any)({ inputRange: [0,1], outputRange: [0, 600] }) }] }] }>
               <View style={styles.dossierHeader}>
                 <Text style={{fontSize:18, fontWeight:'bold'}}>{selected.device} — Case {selected.id}</Text>
                 <TouchableOpacity onPress={closeDossier}><Text style={{color:'#ff6b00'}}>Close</Text></TouchableOpacity>
@@ -244,7 +216,7 @@ const styles = StyleSheet.create({
   roleBadge: { backgroundColor: '#00ff41', padding: 6, borderRadius: 6 },
 
   metricsRow: { display: 'flex', flexDirection: 'row', gap: 16, marginBottom: 20 },
-  metricCard: { flex: 1, padding: 18, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0,255,65,0.12)', boxShadow: '0 6px 30px rgba(0,255,65,0.06)' },
+  metricCard: ({ flex: 1, padding: 18, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0,255,65,0.12)', boxShadow: '0 6px 30px rgba(0,255,65,0.06)' } as any),
   metricTitle: { color: '#9fbf9f', fontSize: 12 },
   metricValue: { fontSize: 22, fontWeight: 'bold' },
 
@@ -268,11 +240,11 @@ const styles = StyleSheet.create({
   consoleStrip: { marginTop: 18, padding: 12, backgroundColor: '#020203', borderRadius: 8, borderWidth:1, borderColor:'#0b660f' },
   consoleLine: { color: '#00ff41', marginRight: 20, fontFamily: 'JetBrains Mono' },
 
-  slideOver: { position: 'fixed', right: 0, top: 80, width: 560, bottom: 40, backgroundColor: '#08090b', borderLeftWidth: 1, borderColor: '#222', zIndex: 1000 },
+  slideOver: ({ position: 'fixed', right: 0, top: 80, width: 560, bottom: 40, backgroundColor: '#08090b', borderLeftWidth: 1, borderColor: '#222', zIndex: 1000 } as any),
   dossierHeader: { padding: 12, borderBottomWidth: 1, borderColor: '#111', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   secTitle: { color: '#00ff41', marginTop: 12, marginBottom: 6, fontWeight: 'bold' },
 
   footNote: { marginTop: 10, textAlign: 'center' }
 });
 
-export { default } from './WebDashboard';
+export default WebDashboard;

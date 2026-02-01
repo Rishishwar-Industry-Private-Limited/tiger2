@@ -1,0 +1,11 @@
+/* Minimal theme tokens used by the old pages */
+:root{
+  --background-dark:#0a120a;
+  --background-light:#f6f8f6;
+  --surface-dark:#112211;
+  --border-dark:#234823;
+  --primary:#13ec13;
+}
+body{font-family: 'Space Grotesk', sans-serif}
+.glass-container{ background: rgba(15,23,15,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(56,250,56,0.12); }
+.forensic-grid{ background-size: 20px 20px; background-image: radial-gradient(circle, #1a331a 1px, transparent 1px); }
