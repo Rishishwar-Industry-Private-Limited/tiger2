@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "NODE_ENV=development JWT_SECRET=dev_secret ADMIN_SETUP_TOKEN=dev_token MONGO_URI=mongodb://localhost:27017/tiger2 node server.js",
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "axios": "^1.6.2",
@@ -16,9 +17,17 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^9.1.5",
-    "node-telegram-bot-api": "^0.67.0",
     "pdfkit": "^0.13.0"
   },
   "author": "Tiger",
-  "license": "ISC"
+  "license": "ISC",
+  "overrides": {
+    "tar": "7.5.7"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^8.16.1",
+    "supertest": "^7.2.2"
+  }
 }

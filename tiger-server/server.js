@@ -20,6 +20,7 @@ const personnelRouter = require('./routes/personnel');
 
 // JWT secret check
 if (!process.env.JWT_SECRET) console.warn('[server] WARNING: JWT_SECRET not set. Use a strong secret in production (process.env.JWT_SECRET).');
+if (!process.env.ADMIN_SETUP_TOKEN) console.warn('[server] NOTE: ADMIN_SETUP_TOKEN not set. Use a one-time token to create the initial admin via POST /auth/create.');
 
 app.use('/', logsRouter);
 app.use('/auth', authRouter);
@@ -45,6 +46,16 @@ app.get('/admin', (req, res) => {
 app.get('/', (req, res) => res.json({ status: 'Tiger Server running' }));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`🚀 Tiger Server is Live on Port ${PORT}`);
-});
+
+// Only start the server when run directly; this allows test runners to import the app without starting a listener
+if (require.main === module) {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[server] Running in development mode with safe defaults.');
+    console.log(`[server] JWT_SECRET=${process.env.JWT_SECRET ? 'SET' : 'EMPTY'} ADMIN_SETUP_TOKEN=${process.env.ADMIN_SETUP_TOKEN ? 'SET' : 'EMPTY'} MONGO_URI=${process.env.MONGO_URI || 'mongodb://localhost:27017/tiger2'}`);
+  }
+  app.listen(PORT, () => {
+      console.log(`🚀 Tiger Server is Live on Port ${PORT}`);
+  });
+}
+
+module.exports = app;
