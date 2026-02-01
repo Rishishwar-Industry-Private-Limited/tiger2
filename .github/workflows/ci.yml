@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install server dependencies
+        run: npm ci --prefix tiger-server
+
+      - name: Run ESLint (server)
+        run: npm --prefix tiger-server run lint
+
+      - name: Run server tests
+        run: npm --prefix tiger-server test
+
+      - name: Start server (dev-mode) and run smoke test
+        run: |
+          npm --prefix tiger-server run dev &
+          echo "Waiting for server to start..."
+          for i in {1..10}; do
+            sleep 1
+            if curl -sSf http://localhost:10000/ >/dev/null; then
+              break
+            fi
+          done
+          curl -sSf http://localhost:10000/ | jq || true
+        env:
+          NODE_ENV: development
+          JWT_SECRET: dev_secret
+          ADMIN_SETUP_TOKEN: dev_token
+          MONGO_URI: mongodb://localhost:27017/tiger2

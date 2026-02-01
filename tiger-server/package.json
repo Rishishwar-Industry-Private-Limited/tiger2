@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "NODE_ENV=development JWT_SECRET=dev_secret ADMIN_SETUP_TOKEN=dev_token MONGO_URI=mongodb://localhost:27017/tiger2 node server.js",
+    "lint": "eslint .",
     "test": "jest --runInBand"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "eslint": "^8.57.1",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^8.16.1",
     "supertest": "^7.2.2"
