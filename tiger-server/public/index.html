@@ -66,7 +66,15 @@
                     </a>
 <a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined text-sm">monitoring</span>Live Monitor</a>
 <a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined text-sm">description</span>Reports</a>
-<a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined text-sm">description</span>More</a>
+<div class="relative group">
+                        <button class="hover:text-primary transition-colors flex items-center gap-2 px-2 py-1 rounded">
+                            <span class="material-symbols-outlined text-sm">more_vert</span>More
+                        </button>
+                        <div class="absolute right-0 mt-2 w-44 bg-surface-dark border border-border-dark rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                            <a class="block px-4 py-2 hover:bg-primary/5 text-sm" href="/user-management.html">Users</a>
+                            <a class="block px-4 py-2 hover:bg-primary/5 text-sm" href="/badge-generator.html">Badge Generator</a>
+                        </div>
+                    </div>
 </nav>
 </div>
 <div class="flex items-center gap-4 flex-1 max-w-md">

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tiger V2 - User Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>body{font-family:'Space Grotesk',sans-serif;background-color:#000000;background-image:linear-gradient(rgba(31,249,31,0.03) 1px, transparent 1px),linear-gradient(90deg, rgba(31,249,31,0.03) 1px, transparent 1px);background-size:40px 40px} .scanline{width:100%;height:2px;background:rgba(31,249,31,0.2);position:fixed;top:0;left:0;z-index:50;pointer-events:none}</style>
+</head>
+<body class="dark text-white">
+<div class="scanline"></div>
+<header class="p-4 border-b border-white/10 flex items-center justify-between">
+  <div class="flex items-center gap-4">
+    <h1 class="text-2xl font-bold">User Management</h1>
+    <nav class="flex gap-2 text-sm text-white/60">
+      <a href="/" class="hover:text-primary">Dashboard</a>
+      <a class="text-primary" href="#">Users</a>
+    </nav>
+  </div>
+  <div>
+    <button onclick="logout()" class="px-3 py-1 border border-white/10 rounded">Logout</button>
+  </div>
+</header>
+<main class="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!-- Left: Tabs + Form -->
+  <div class="lg:col-span-1 space-y-4">
+    <div class="bg-surface-dark border border-white/10 p-6 rounded-xl">
+      <div class="flex items-center gap-2 mb-4">
+        <button id="tab-officer" class="px-3 py-2 bg-primary text-black rounded font-bold">Officer Onboarding</button>
+        <button id="tab-constable" class="px-3 py-2 bg-white/5 rounded">Constable Onboarding</button>
+      </div>
+      <div id="officer-form">
+        <!-- Inserted Officer Onboarding form (sanitized) -->
+        <h3 class="text-lg font-bold mb-4">Register New Personnel</h3>
+        <form id="create-person-form" class="space-y-4" onsubmit="return false;">
+          <div>
+            <label class="text-xs text-white/60 uppercase">Full Name</label>
+            <input id="p-fullName" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2" placeholder="e.g. Det. Marcus Vance" />
+          </div>
+          <div>
+            <label class="text-xs text-white/60 uppercase">Badge ID</label>
+            <input id="p-badgeId" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2 uppercase" placeholder="TV2-XXXX" />
+          </div>
+          <div>
+            <label class="text-xs text-white/60 uppercase">Assigned Rank</label>
+            <select id="p-rank" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2">
+              <option>Investigator</option>
+              <option>Analyst</option>
+              <option>Sr. Intel Analyst</option>
+              <option>Detective</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-white/60 uppercase">Secure Password</label>
+            <input id="p-password" type="password" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2" placeholder="••••••••••" />
+          </div>
+          <div class="flex gap-2">
+            <button id="create-btn" class="w-full bg-primary text-black py-2 rounded font-bold">Register User</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="constable-form" class="hidden">
+        <h3 class="text-lg font-bold mb-4">Constable Onboarding</h3>
+        <form id="create-constable-form" class="space-y-4" onsubmit="return false;">
+          <div>
+            <label class="text-xs text-white/60 uppercase">Full Name</label>
+            <input id="c-fullName" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2" placeholder="e.g. Constable R. Singh" />
+          </div>
+          <div>
+            <label class="text-xs text-white/60 uppercase">Badge ID</label>
+            <input id="c-badgeId" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2 uppercase" placeholder="TV2-CXXX" />
+          </div>
+          <div>
+            <label class="text-xs text-white/60 uppercase">Unit / Patrol</label>
+            <input id="c-unit" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2" placeholder="North Precinct" />
+          </div>
+          <div>
+            <label class="text-xs text-white/60 uppercase">Password</label>
+            <input id="c-password" type="password" class="w-full bg-black/80 border border-white/6 rounded px-3 py-2" placeholder="••••••••" />
+          </div>
+          <div class="flex gap-2">
+            <button id="create-c-btn" class="w-full bg-primary text-black py-2 rounded font-bold">Register Constable</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+    <div class="bg-white/5 border border-white/10 p-4 rounded-xl text-sm text-white/60">
+      <p class="font-bold">Security Notes</p>
+      <p class="text-xs mt-2">All new accounts will be created in <code>pending</code> status. Use the verification queue to approve and generate badges.</p>
+    </div>
+  </div>
+
+  <!-- Middle: Queue -->
+  <div class="lg:col-span-2 space-y-4">
+    <div class="bg-surface-dark border border-white/10 p-6 rounded-xl">
+      <h3 class="text-lg font-bold mb-4">Verification Queue</h3>
+      <div id="queue" class="space-y-4 max-h-[60vh] overflow-auto"></div>
+    </div>
+    <div class="flex gap-4">
+      <button id="refresh-queue" class="px-4 py-2 rounded border border-white/10">Refresh</button>
+      <button id="goto-badge" class="px-4 py-2 bg-primary text-black rounded">Open Badge Generator</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Simple auth helpers (reuse same token storage as dashboard)
+  function getToken(){return localStorage.getItem('tiger_token');}
+  function fetchWithAuth(url, opts={}){opts.headers = opts.headers || {}; const token = getToken(); if(token) opts.headers['Authorization'] = 'Bearer '+token; return fetch(url, opts);}
+
+  // Tabs
+  document.getElementById('tab-officer').addEventListener('click', ()=>{document.getElementById('officer-form').classList.remove('hidden');document.getElementById('constable-form').classList.add('hidden');document.getElementById('tab-officer').classList.add('bg-primary');document.getElementById('tab-constable').classList.remove('bg-primary');});
+  document.getElementById('tab-constable').addEventListener('click', ()=>{document.getElementById('officer-form').classList.add('hidden');document.getElementById('constable-form').classList.remove('hidden');document.getElementById('tab-officer').classList.remove('bg-primary');document.getElementById('tab-constable').classList.add('bg-primary');});
+
+  // Create personnel
+  async function createPersonnel(payload){
+    const res = await fetchWithAuth('/personnel', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    return res.json();
+  }
+
+  document.getElementById('create-btn').addEventListener('click', async ()=>{
+    const fullName = document.getElementById('p-fullName').value.trim();
+    const badgeId = document.getElementById('p-badgeId').value.trim();
+    const assignedRank = document.getElementById('p-rank').value;
+    const password = document.getElementById('p-password').value;
+    if(!fullName||!badgeId||!assignedRank){alert('Please fill required fields');return}
+    const result = await createPersonnel({fullName,badgeId,assignedRank,role:'officer',password});
+    console.log('created',result);
+    await refreshQueue();
+    alert('Created new personnel (pending verification)');
+  });
+
+  document.getElementById('create-c-btn').addEventListener('click', async ()=>{
+    const fullName = document.getElementById('c-fullName').value.trim();
+    const badgeId = document.getElementById('c-badgeId').value.trim();
+    const assignedRank = document.getElementById('c-unit').value || 'Constable';
+    const password = document.getElementById('c-password').value;
+    if(!fullName||!badgeId){alert('Please fill required fields');return}
+    const result = await createPersonnel({fullName,badgeId,assignedRank,role:'constable',password});
+    console.log('created',result);
+    await refreshQueue();
+    alert('Created new constable (pending verification)');
+  });
+
+  async function refreshQueue(){
+    const res = await fetchWithAuth('/personnel');
+    const list = await res.json();
+    const el = document.getElementById('queue'); el.innerHTML = '';
+    list.filter(p=>p.status==='pending').forEach(p=>{
+      const div = document.createElement('div'); div.className='p-4 bg-background-dark border border-white/10 rounded';
+      div.innerHTML = `<div class="flex justify-between items-start"><div><h4 class="font-bold">${p.fullName}</h4><div class="text-xs text-white/60">ID: ${p.badgeId} • ${p.assignedRank} • ${p.role}</div></div><div class="flex gap-2"><button class="verify bg-primary text-black px-3 py-1 rounded" data-id="${p._id}">Verify</button><button class="deny border border-white/10 px-3 py-1 rounded text-sm text-white/60" data-id="${p._id}">Deny</button><button class="badge border border-white/10 px-3 py-1 rounded text-sm text-white/60" data-badge="${p.badgeId}" data-rank="${p.assignedRank}">Badge</button></div></div>`;
+      el.appendChild(div);
+    });
+
+    // Attach handlers
+    document.querySelectorAll('.verify').forEach(btn=>btn.addEventListener('click', async e=>{
+      const id = e.currentTarget.getAttribute('data-id');
+      await fetchWithAuth(`/personnel/${id}/verify`, {method:'POST'});
+      await refreshQueue();
+    }));
+    document.querySelectorAll('.deny').forEach(btn=>btn.addEventListener('click', async e=>{
+      const id = e.currentTarget.getAttribute('data-id');
+      await fetchWithAuth(`/personnel/${id}/deny`, {method:'POST'});
+      await refreshQueue();
+    }));
+    document.querySelectorAll('.badge').forEach(btn=>btn.addEventListener('click', e=>{
+      const badge = e.currentTarget.getAttribute('data-badge');
+      const rank = e.currentTarget.getAttribute('data-rank');
+      // Open badge generator with query params
+      window.location.href = `/badge-generator.html?badgeId=${encodeURIComponent(badge)}&rank=${encodeURIComponent(rank)}`;
+    }));
+  }
+
+  document.getElementById('refresh-queue').addEventListener('click', refreshQueue);
+  document.getElementById('goto-badge').addEventListener('click', ()=>{window.location.href='/badge-generator.html'});
+
+  // Initial load
+  (async ()=>{ try{ await refreshQueue(); }catch(e){ console.warn('refresh failed',e); } })();
+
+  // Logout helper (same as dashboard)
+  function logout(){ localStorage.removeItem('tiger_token'); window.location.href='/login.html'; }
+</script>
+</body></html>

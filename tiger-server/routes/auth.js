@@ -65,4 +65,20 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// GET /auth/dev-token -> developer bypass token (opt-in via DEV_BYPASS=true)
+router.get('/dev-token', (req, res) => {
+  try {
+    if (process.env.DEV_BYPASS !== 'true') return res.status(403).json({ error: 'disabled' });
+    // Allow only local connections
+    const ip = (req.ip || req.connection.remoteAddress || '').replace('::ffff:', '');
+    if (!(ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1')) return res.status(403).json({ error: 'forbidden' });
+    const username = req.query.username || 'dev-admin';
+    const token = jwt.sign({ username, role: 'admin', note: 'dev-bypass' }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '12h' });
+    res.json({ token });
+  } catch (err) {
+    console.error('[auth] dev-token error:', err);
+    res.status(500).json({ error: 'server' });
+  }
+});
+
 module.exports = router;

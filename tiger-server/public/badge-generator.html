@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tiger V2 Badge ID Generator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>body{background-color:#000000;background-image:linear-gradient(rgba(31,249,31,0.03) 1px, transparent 1px),linear-gradient(90deg, rgba(31,249,31,0.03) 1px, transparent 1px);background-size:40px 40px} .scanline{width:100%;height:2px;background:rgba(31,249,31,0.2);position:absolute;top:0;left:0;z-index:10;pointer-events:none;box-shadow:0 0 10px rgba(31,249,31,0.5)} .glitch-effect:active{filter:hue-rotate(90deg) contrast(1.5);transform:skewX(2deg)} </style>
+</head>
+<body class="font-display text-white selection:bg-primary selection:text-black">
+<div class="scanline"></div>
+<header class="flex items-center justify-between border-b border-white/10 px-8 py-4">
+  <div class="flex items-center gap-4">
+    <h1 class="text-2xl font-bold">Badge ID Auto-Generator</h1>
+  </div>
+  <div>
+    <button onclick="history.back()" class="px-3 py-1 border border-white/10 rounded">Back</button>
+  </div>
+</header>
+<main class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div class="space-y-6">
+    <div class="bg-white/5 p-6 rounded-xl">
+      <h2 class="text-primary text-xs font-black uppercase">01. Identity Parameters</h2>
+      <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs text-white/60 uppercase">Unit Prefix</label>
+          <select id="unitPrefix" class="w-full bg-black border border-white/10 rounded px-3 py-2">
+            <option value="CYB">CYB - Cyber Crime</option>
+            <option value="INT" selected>INT - Tactical Intel</option>
+            <option value="FRN">FRN - Forensic Analysis</option>
+            <option value="OPS">OPS - Field Ops</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-white/60 uppercase">Clearance Level</label>
+          <select id="clearance" class="w-full bg-black border border-white/10 rounded px-3 py-2">
+            <option>Level 01 - Restricted</option>
+            <option>Level 02 - Confidential</option>
+            <option selected>Level 03 - Secret</option>
+            <option>Level 04 - Top Secret</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white/5 p-6 rounded-xl">
+      <h2 class="text-accent-cyan text-xs font-black uppercase">02. Format Builder</h2>
+      <div class="space-y-3 mt-3">
+        <div class="flex items-center justify-between"><span>Include Year of Commission</span><input id="includeYear" type="checkbox" checked></div>
+        <div class="flex items-center justify-between"><span>Department Code Overlay</span><input id="includeDept" type="checkbox" checked></div>
+        <div class="flex items-center justify-between"><span>Random SHA-256 Hash</span><input id="includeHash" type="checkbox" checked></div>
+      </div>
+    </div>
+    <div class="bg-white/5 p-6 rounded-xl">
+      <h2 class="text-white/60 text-xs font-black uppercase">03. Visual Rank</h2>
+      <div class="flex gap-3 mt-3">
+        <button class="px-4 py-2 border border-white/10 rounded" data-rank="Sr. Intel Analyst">Sr. Intel Analyst</button>
+        <button class="px-4 py-2 border border-white/10 rounded" data-rank="Investigator">Investigator</button>
+        <button class="px-4 py-2 border border-white/10 rounded" data-rank="Constable">Constable</button>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <input id="badgeId" class="flex-1 bg-black border border-white/10 rounded px-3 py-2" placeholder="ID-INT-2024-XXXX" />
+      <button id="genBtn" class="px-4 py-2 bg-primary text-black rounded font-bold">Regenerate ID</button>
+    </div>
+  </div>
+  <div class="flex items-center justify-center">
+    <div id="preview" class="relative w-80 h-[480px] bg-zinc-900 border border-white/20 rounded-2xl overflow-hidden p-6">
+      <div class="flex flex-col gap-2">
+        <div><span class="text-[10px]">Identification No.</span><div id="previewId" class="text-xl font-black font-mono">ID-INT-2024-X49B</div></div>
+        <div class="mt-auto"><button id="downloadBtn" class="mt-4 w-full px-4 py-3 bg-primary text-black rounded font-bold">Download SVG / JSON</button></div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const initialBadge = params.get('badgeId');
+  const initialRank = params.get('rank');
+  if(initialBadge) document.getElementById('badgeId').value = initialBadge;
+  if(initialRank){ /* could set rank selection UI, but simple preview text */ }
+
+  function genRandomSuffix(){ return Math.random().toString(36).substring(2,6).toUpperCase(); }
+  document.getElementById('genBtn').addEventListener('click', ()=>{
+    const prefix = document.getElementById('unitPrefix').value || 'INT';
+    const year = document.getElementById('includeYear').checked ? '-' + new Date().getFullYear() : '';
+    const suffix = genRandomSuffix();
+    const id = `ID-${prefix}${year}-${suffix}`;
+    document.getElementById('badgeId').value = id;
+    document.getElementById('previewId').textContent = id;
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', ()=>{
+    const id = document.getElementById('badgeId').value || document.getElementById('previewId').textContent;
+    const payload = { id, generatedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `${id}.json`; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Pre-generate on load if query param present
+  if(initialBadge){ document.getElementById('previewId').textContent = initialBadge; }
+</script>
+</body></html>

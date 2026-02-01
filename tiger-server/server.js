@@ -16,6 +16,7 @@ const usersRouter = require('./routes/users');
 const evidenceRouter = require('./routes/evidence');
 const statsRouter = require('./routes/stats');
 const authRouter = require('./routes/auth');
+const personnelRouter = require('./routes/personnel');
 
 // JWT secret check
 if (!process.env.JWT_SECRET) console.warn('[server] WARNING: JWT_SECRET not set. Use a strong secret in production (process.env.JWT_SECRET).');
@@ -23,6 +24,7 @@ if (!process.env.JWT_SECRET) console.warn('[server] WARNING: JWT_SECRET not set.
 app.use('/', logsRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
+app.use('/personnel', personnelRouter);
 app.use('/', evidenceRouter);
 app.use('/stats', statsRouter);
 

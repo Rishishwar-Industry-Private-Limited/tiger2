@@ -75,7 +75,8 @@ document.getElementById('btn-login').addEventListener('click', async () => {
 document.getElementById('btn-cancel').addEventListener('click', () => { document.getElementById('username').value=''; document.getElementById('password').value=''; });
 
 // --- Dev bypass helper (local only) ---
-const DEV_BYPASS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IktpbmdyYWoyMTAxIiwicm9sZSI6ImFkbWluIiwibm90ZSI6ImRldi1ieXBhc3MiLCJpYXQiOjE3Njk4OTIwMzUsImV4cCI6MTc3MDQ5NjgzNX0.mF747i1_TeGaZ7Kff15jioLkeXVAb79pPg330O52sZA';
+// DEV_BYPASS_TOKEN removed for security. Use the server to create a token via /auth/create or set a dev token in the environment for local testing.
+const DEV_BYPASS_TOKEN = '';
 function isLocalHost() {
     try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h === '::1'; } catch(e){return false}
 }
@@ -86,9 +87,22 @@ if (isLocalHost()) {
 
 const bypassBtn = document.getElementById('btn-bypass');
 if (bypassBtn) {
-    bypassBtn.addEventListener('click', () => {
+    bypassBtn.addEventListener('click', async () => {
+        // Try server-side dev-token endpoint first (opt-in DEV_BYPASS)
+        try {
+            const res = await fetch('/auth/dev-token?username=Kingraj2101');
+            if (res.ok) {
+                const j = await res.json();
+                localStorage.setItem('tiger_token', j.token);
+                bypassBtn.innerText = 'Bypassed ✓';
+                setTimeout(() => window.location.href = '/', 500);
+                return;
+            }
+        } catch (e) {
+            console.warn('dev-token endpoint not available', e);
+        }
+        // Fallback to static token
         localStorage.setItem('tiger_token', DEV_BYPASS_TOKEN);
-        // small visual feedback
         bypassBtn.innerText = 'Bypassed ✓';
         setTimeout(() => window.location.href = '/', 500);
     });
