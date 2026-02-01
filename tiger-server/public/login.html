@@ -44,9 +44,11 @@
             <div class="flex gap-2">
                 <button id="btn-login" class="bg-primary px-4 py-2 rounded font-bold text-black">Sign In</button>
                 <button id="btn-cancel" class="bg-white/5 px-4 py-2 rounded">Cancel</button>
+                <button id="btn-bypass" class="hidden bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-bold text-white">Bypass Login (Dev)</button>
             </div>
         </div>
         <p id="login-msg" class="text-sm text-emergency-orange mt-4"></p>
+        <p id="bypass-note" class="text-xs text-white/60 mt-2 hidden">Dev bypass enabled for <strong>localhost</strong> only. Use responsibly.</p>
     </div>
 </main>
 <script>
@@ -71,6 +73,27 @@ document.getElementById('btn-login').addEventListener('click', async () => {
 });
 
 document.getElementById('btn-cancel').addEventListener('click', () => { document.getElementById('username').value=''; document.getElementById('password').value=''; });
+
+// --- Dev bypass helper (local only) ---
+const DEV_BYPASS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IktpbmdyYWoyMTAxIiwicm9sZSI6ImFkbWluIiwibm90ZSI6ImRldi1ieXBhc3MiLCJpYXQiOjE3Njk4OTIwMzUsImV4cCI6MTc3MDQ5NjgzNX0.mF747i1_TeGaZ7Kff15jioLkeXVAb79pPg330O52sZA';
+function isLocalHost() {
+    try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h === '::1'; } catch(e){return false}
+}
+if (isLocalHost()) {
+    document.getElementById('btn-bypass').classList.remove('hidden');
+    document.getElementById('bypass-note').classList.remove('hidden');
+}
+
+const bypassBtn = document.getElementById('btn-bypass');
+if (bypassBtn) {
+    bypassBtn.addEventListener('click', () => {
+        localStorage.setItem('tiger_token', DEV_BYPASS_TOKEN);
+        // small visual feedback
+        bypassBtn.innerText = 'Bypassed ✓';
+        setTimeout(() => window.location.href = '/', 500);
+    });
+}
+
 </script>
 </body>
 </html>
